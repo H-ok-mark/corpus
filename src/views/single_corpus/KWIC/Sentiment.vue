@@ -1,1 +1,0 @@
-<template>自动识别检索行的语义倾向并展示检索行</template>
