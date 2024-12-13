@@ -2,7 +2,13 @@
 
 <script setup lang="ts">
     import { ref } from 'vue';
-    import { Search, Aim, PieChart, ArrowDown } from '@element-plus/icons-vue';
+    import {
+        Search,
+        Aim,
+        PieChart,
+        ArrowDown,
+        Filter,
+    } from '@element-plus/icons-vue';
     import { ElMessageBox } from 'element-plus';
 
     const words = ref('');
@@ -194,7 +200,7 @@
                                         size="default"
                                         type="info"
                                         plain
-                                        :icon="ArrowDown"
+                                        :icon="Filter"
                                         circle
                                     ></el-button>
                                 </template>
@@ -321,7 +327,7 @@
                                         size="default"
                                         type="info"
                                         plain
-                                        :icon="ArrowDown"
+                                        :icon="Filter"
                                         circle
                                     ></el-button>
                                 </template>

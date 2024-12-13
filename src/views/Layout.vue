@@ -8,6 +8,12 @@
         EditPen,
         SwitchButton,
         CaretBottom,
+        House,
+        Operation,
+        ZoomOut,
+        Search,
+        Notebook,
+        Compass,
     } from '@element-plus/icons-vue';
     import avatar from '@/assets/default.png';
 </script>
@@ -25,7 +31,7 @@
             >
                 <el-menu-item index="/welcome">
                     <el-icon>
-                        <CaretBottom />
+                        <House />
                     </el-icon>
                     <span>首页</span>
                 </el-menu-item>
@@ -39,22 +45,22 @@
 
                 <el-menu-item index="/signal-corpus/words">
                     <el-icon>
-                        <Promotion />
+                        <Search />
                     </el-icon>
-                    <span>词频统计（Words）</span>
+                    <span>词频统计</span>
                 </el-menu-item>
 
                 <el-menu-item index="/signal-corpus/kwic">
                     <el-icon>
-                        <Management />
+                        <Operation />
                     </el-icon>
-                    <span>上下文关键字（KWIC）</span>
+                    <span>上下文关键字</span>
                 </el-menu-item>
 
                 <el-sub-menu>
                     <template #title>
                         <el-icon>
-                            <UserFilled />
+                            <Notebook />
                         </el-icon>
                         <span>语料库管理</span>
                     </template>
@@ -68,7 +74,7 @@
 
                     <el-menu-item index="/corpus/list">
                         <el-icon>
-                            <Crop />
+                            <Compass />
                         </el-icon>
                         <span>获取语料库</span>
                     </el-menu-item>
