@@ -9,10 +9,8 @@ import LayoutVue from '@/views/Layout.vue';
 // import UserInfoVue from '@/views/user/UserInfo.vue';
 // import UserResetPasswordVue from '@/views/user/UserResetPassword.vue';
 
-import CorpusDownloadVue from "@/views/corpus/CorpusDownload.vue";
 import UserCorpusVue from "@/views/corpus/UserCorpus.vue";
 import CorpusListVue from "@/views/corpus/CorpusList.vue";
-import CorpusImportVue from "@/views/corpus/CorpusImport.vue";
 import TranslationVue from "@/views/double_corpus/Translation.vue";
 import KwicVue from "@/views/single_corpus/KWIC/Kwic.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
@@ -37,8 +35,6 @@ const routes = [
             { path: "/signal-corpus/kwic", component: KwicVue },
             { path: "/signal-corpus/words", component: WordsVue },
             { path: "/double-corpus/translation", component: TranslationVue },
-            { path: "/corpus/download", component: CorpusDownloadVue },
-            { path: "/corpus/import", component: CorpusImportVue },
             { path: "/corpus/list", component: CorpusListVue },
             { path: "/corpus/users", component: UserCorpusVue },
 

@@ -59,7 +59,7 @@
         pageNum.value = num;
     };
 
-    // 上传文件
+    // 上传文件--单文档
     const fileList = ref<UploadUserFile[]>([
         {
             name: 'element-plus-logo.svg',
@@ -81,7 +81,7 @@
 
     const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
         ElMessage.warning(
-            `The limit is 3, you selected ${
+            `The limit is 2, you selected ${
                 files.length
             } files this time, add up to ${
                 files.length + uploadFiles.length
@@ -97,16 +97,32 @@
             () => false
         );
     };
+    //单/双文档选择
+    const simple = true;
+    //单/双文档选项
+    const fileRadio = ref('单文档对齐');
 </script>
 
 <template>
-    <el-card class="words-container">
-        <!-- <template #header>
-            <div class="header">
-                <span>语料对齐</span>
-            </div>
-        </template> -->
-        <div class="words-search">
+    <el-card class="translation-container">
+        <!-- 单双文档选择器 -->
+        <div class="simple-file-radio">
+            <el-radio-group v-model="fileRadio" size="large">
+                <el-radio-button
+                    label="单文档对齐"
+                    value="单文档对齐"
+                    @click="simple = true"
+                />
+                <el-radio-button
+                    label="双文档对齐"
+                    value="双文档对齐"
+                    @click="simple = false"
+                />
+            </el-radio-group>
+        </div>
+        <!-- 单文档对齐 -->
+        <div class="simple-file" v-if="simple">
+            <!-- 文件上传 -->
             <el-upload
                 v-model:file-list="fileList"
                 class="upload-demo"
@@ -119,14 +135,47 @@
                 :on-exceed="handleExceed"
             >
                 <el-button type="primary" plain>Click to upload</el-button>
-                <el-button type="success">begin</el-button>
                 <template #tip>
                     <div class="el-upload__tip" text-align:center>
                         Only excel, word, and pdf are supported
                     </div>
                 </template>
             </el-upload>
+
+            <!-- 开始按钮 -->
+            <el-button type="success">begin</el-button>
         </div>
+        <!-- 双文档对齐 -->
+        <div class="double-file" v-else>
+            <el-upload
+                v-model:file-list="fileList"
+                class="upload-demo"
+                action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                multiple
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-remove="beforeRemove"
+                :limit="2"
+                :on-exceed="handleExceed"
+            >
+                <el-button type="primary" plain>Click to upload</el-button>
+            </el-upload>
+            <el-button type="success">begin</el-button>
+            <el-upload
+                v-model:file-list="fileList"
+                class="upload-demo"
+                action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                multiple
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-remove="beforeRemove"
+                :limit="2"
+                :on-exceed="handleExceed"
+            >
+                <el-button type="primary" plain>Click to upload</el-button>
+            </el-upload>
+        </div>
+
         <!-- 结果表格 -->
         <div class="result">
             <el-table
@@ -152,7 +201,22 @@
 </template>
 
 <style scoped>
-    .words-search {
+    .translation-container {
+        min-height: 100%;
+        box-sizing: border-box;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .simple-file {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+        text-align: center;
+    }
+    .double-file {
         display: flex;
         justify-content: center;
         margin-top: 10px;
@@ -163,16 +227,5 @@
         margin-top: 1px;
         display: flex;
         justify-content: center;
-    }
-
-    .words-container {
-        min-height: 100%;
-        box-sizing: border-box;
-    }
-
-    .header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
     }
 </style>
