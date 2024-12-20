@@ -139,7 +139,7 @@
     <el-card class="KWIC-container">
         <template #header>
             <div class="header">
-                <span>检索词在语料库中的上下文，默认显示Left5—Node—Right5</span>
+                <h2>KWIC</h2>
             </div>
         </template>
 
@@ -170,7 +170,7 @@
             <el-table
                 :data="tableData"
                 stripe
-                style="width: 100%%"
+                style="width: 80%"
                 :border="true"
                 margin-left="200px"
             >

@@ -71,7 +71,7 @@
     <el-card class="words-container">
         <template #header>
             <div class="header">
-                <span>词频统计</span>
+                <h2>词频统计</h2>
             </div>
         </template>
 

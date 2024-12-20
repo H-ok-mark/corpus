@@ -12,9 +12,9 @@ import LayoutVue from '@/views/Layout.vue';
 import UserCorpusVue from "@/views/corpus/UserCorpus.vue";
 import CorpusListVue from "@/views/corpus/CorpusList.vue";
 import TranslationVue from "@/views/double_corpus/Translation.vue";
-import KwicVue from "@/views/single_corpus/KWIC/Kwic.vue";
+import KwicVue from "@/views/single_corpus/KWIC/KWIC.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
-import Welcomevue from "@/views/welcome.vue"
+import Welcomevue from "@/views/Welcome.vue"
 
 
 

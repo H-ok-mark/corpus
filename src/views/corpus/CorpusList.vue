@@ -1,293 +1,74 @@
 <script setup lang="ts">
     import { ref } from 'vue';
-    const props = {
-        multiple: true,
-    };
+    import { Search } from '@element-plus/icons-vue';
 
-    const options = [
+    // 搜索关键词
+    const searchQuery = ref('');
+
+    // 模拟的语料库数据
+    const corpusList = ref([
         {
-            value: 'guide',
-            label: 'Guide',
-            children: [
-                {
-                    value: 'disciplines',
-                    label: 'Disciplines',
-                    children: [
-                        {
-                            value: 'consistency',
-                            label: 'Consistency',
-                        },
-                        {
-                            value: 'feedback',
-                            label: 'Feedback',
-                        },
-                        {
-                            value: 'efficiency',
-                            label: 'Efficiency',
-                        },
-                        {
-                            value: 'controllability',
-                            label: 'Controllability',
-                        },
-                    ],
-                },
-                {
-                    value: 'navigation',
-                    label: 'Navigation',
-                    children: [
-                        {
-                            value: 'side nav',
-                            label: 'Side Navigation',
-                        },
-                        {
-                            value: 'top nav',
-                            label: 'Top Navigation',
-                        },
-                    ],
-                },
-            ],
+            name: '英语新闻语料库',
+            description: '包含近5年的英语新闻文章，涵盖政治、经济、科技等领域',
         },
         {
-            value: 'component',
-            label: 'Component',
-            children: [
-                {
-                    value: 'basic',
-                    label: 'Basic',
-                    children: [
-                        {
-                            value: 'layout',
-                            label: 'Layout',
-                        },
-                        {
-                            value: 'color',
-                            label: 'Color',
-                        },
-                        {
-                            value: 'typography',
-                            label: 'Typography',
-                        },
-                        {
-                            value: 'icon',
-                            label: 'Icon',
-                        },
-                        {
-                            value: 'button',
-                            label: 'Button',
-                        },
-                    ],
-                },
-                {
-                    value: 'form',
-                    label: 'Form',
-                    children: [
-                        {
-                            value: 'radio',
-                            label: 'Radio',
-                        },
-                        {
-                            value: 'checkbox',
-                            label: 'Checkbox',
-                        },
-                        {
-                            value: 'input',
-                            label: 'Input',
-                        },
-                        {
-                            value: 'input-number',
-                            label: 'InputNumber',
-                        },
-                        {
-                            value: 'select',
-                            label: 'Select',
-                        },
-                        {
-                            value: 'cascader',
-                            label: 'Cascader',
-                        },
-                        {
-                            value: 'switch',
-                            label: 'Switch',
-                        },
-                        {
-                            value: 'slider',
-                            label: 'Slider',
-                        },
-                        {
-                            value: 'time-picker',
-                            label: 'TimePicker',
-                        },
-                        {
-                            value: 'date-picker',
-                            label: 'DatePicker',
-                        },
-                        {
-                            value: 'datetime-picker',
-                            label: 'DateTimePicker',
-                        },
-                        {
-                            value: 'upload',
-                            label: 'Upload',
-                        },
-                        {
-                            value: 'rate',
-                            label: 'Rate',
-                        },
-                        {
-                            value: 'form',
-                            label: 'Form',
-                        },
-                    ],
-                },
-                {
-                    value: 'data',
-                    label: 'Data',
-                    children: [
-                        {
-                            value: 'table',
-                            label: 'Table',
-                        },
-                        {
-                            value: 'tag',
-                            label: 'Tag',
-                        },
-                        {
-                            value: 'progress',
-                            label: 'Progress',
-                        },
-                        {
-                            value: 'tree',
-                            label: 'Tree',
-                        },
-                        {
-                            value: 'pagination',
-                            label: 'Pagination',
-                        },
-                        {
-                            value: 'badge',
-                            label: 'Badge',
-                        },
-                    ],
-                },
-                {
-                    value: 'notice',
-                    label: 'Notice',
-                    children: [
-                        {
-                            value: 'alert',
-                            label: 'Alert',
-                        },
-                        {
-                            value: 'loading',
-                            label: 'Loading',
-                        },
-                        {
-                            value: 'message',
-                            label: 'Message',
-                        },
-                        {
-                            value: 'message-box',
-                            label: 'MessageBox',
-                        },
-                        {
-                            value: 'notification',
-                            label: 'Notification',
-                        },
-                    ],
-                },
-                {
-                    value: 'navigation',
-                    label: 'Navigation',
-                    children: [
-                        {
-                            value: 'menu',
-                            label: 'Menu',
-                        },
-                        {
-                            value: 'tabs',
-                            label: 'Tabs',
-                        },
-                        {
-                            value: 'breadcrumb',
-                            label: 'Breadcrumb',
-                        },
-                        {
-                            value: 'dropdown',
-                            label: 'Dropdown',
-                        },
-                        {
-                            value: 'steps',
-                            label: 'Steps',
-                        },
-                    ],
-                },
-                {
-                    value: 'others',
-                    label: 'Others',
-                    children: [
-                        {
-                            value: 'dialog',
-                            label: 'Dialog',
-                        },
-                        {
-                            value: 'tooltip',
-                            label: 'Tooltip',
-                        },
-                        {
-                            value: 'popover',
-                            label: 'Popover',
-                        },
-                        {
-                            value: 'card',
-                            label: 'Card',
-                        },
-                        {
-                            value: 'carousel',
-                            label: 'Carousel',
-                        },
-                        {
-                            value: 'collapse',
-                            label: 'Collapse',
-                        },
-                    ],
-                },
-            ],
+            name: '学术论文语料库',
+            description: '收录各领域英语学术论文摘要，适合学术写作研究',
         },
         {
-            value: 'resource',
-            label: 'Resource',
-            children: [
-                {
-                    value: 'axure',
-                    label: 'Axure Components',
-                },
-                {
-                    value: 'sketch',
-                    label: 'Sketch Templates',
-                },
-                {
-                    value: 'docs',
-                    label: 'Design Documentation',
-                },
-            ],
+            name: '文学作品语料库',
+            description: '经典英语文学作品集合，包括小说、诗歌等体裁',
         },
-    ];
+    ]);
+
+    // 搜索方法
+    const handleSearch = () => {
+        console.log('搜索关键词:', searchQuery.value);
+    };
 </script>
 
 <template>
-    <el-card class="index-container">
-        <template #header>
-            <div class="header">
-                <span>预览可用语料库列表，并下载获取</span>
-            </div>
-        </template>
-        <div class="m-4">
-            <p>Filterable (Single selection)</p>
-            <el-cascader
-                placeholder="Try searchingL Guide"
-                :options="options"
-                filterable
-            />
+    <el-card class="corpus-container">
+        <!-- 搜索框 -->
+        <div class="search-box">
+            <el-input
+                v-model="searchQuery"
+                placeholder="请输入语料库名称"
+                class="search-input"
+                size="large"
+            >
+                <template #append>
+                    <el-button :icon="Search" @click="handleSearch">
+                        搜索
+                    </el-button>
+                </template>
+            </el-input>
+        </div>
+
+        <!-- 语料库列表 -->
+        <div class="corpus-list">
+            <el-card
+                v-for="corpus in corpusList"
+                :key="corpus.name"
+                class="corpus-item"
+                shadow="hover"
+            >
+                <div class="corpus-content">
+                    <div class="corpus-info">
+                        <h2 class="corpus-title">{{ corpus.name }}</h2>
+                        <p class="corpus-description">
+                            {{ corpus.description }}
+                        </p>
+                    </div>
+                    <div class="corpus-actions">
+                        <el-button-group>
+                            <el-button type="primary" size="large">
+                                下载
+                            </el-button>
+                        </el-button-group>
+                    </div>
+                </div>
+            </el-card>
         </div>
     </el-card>
 </template>
@@ -302,5 +83,62 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+    }
+
+    .search-box {
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .corpus-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .corpus-item {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .corpus-item:hover {
+        transform: translateX(5px);
+    }
+
+    .corpus-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .corpus-info {
+        flex: 1;
+        margin-right: 20px;
+    }
+
+    .corpus-title {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+        color: #303133;
+    }
+
+    .corpus-description {
+        margin: 0;
+        color: #606266;
+        font-size: 14px;
+    }
+
+    .corpus-actions {
+        flex-shrink: 0;
+    }
+
+    :deep(.el-button-group .el-button) {
+        margin-right: -1px;
     }
 </style>

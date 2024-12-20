@@ -98,7 +98,7 @@
         );
     };
     //单/双文档选择
-    const simple = true;
+    const simple = ref(true);
     //单/双文档选项
     const fileRadio = ref('单文档对齐');
 </script>
