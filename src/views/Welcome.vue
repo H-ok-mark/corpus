@@ -174,7 +174,7 @@
     }
 
     .feature-card {
-        height: 200px;
+        height: 230px;
         text-align: center;
         transition: all 0.3s;
     }
@@ -198,6 +198,7 @@
     }
 
     .statistics-section {
+        /* text-align: center; */
         margin-bottom: 30px;
     }
 
