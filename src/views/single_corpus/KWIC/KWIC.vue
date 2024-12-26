@@ -1,22 +1,57 @@
-
-
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { ref, reactive, computed } from 'vue';
     import {
         Search,
         Aim,
         PieChart,
-        ArrowDown,
+        Connection,
         Filter,
+        Download,
+        FullScreen,
     } from '@element-plus/icons-vue';
-    import { ElMessageBox } from 'element-plus';
 
-    const words = ref('');
+    // 搜索词
+    const searchWord = ref('');
+    const hasSearchResult = ref(false);
 
-    // 点击搜索按钮触发的方法
-    const onSearch = () => {
-        console.log('搜索内容:', words.value);
-    };
+    // 词义分析数据
+    const semanticResults = ref([
+        {
+            definition: '椅子(家具)',
+            frequency: 45,
+            examples: ['wooden chair', 'comfortable chair'],
+        },
+        {
+            definition: '主席(职位)',
+            frequency: 30,
+            examples: ['committee chair', 'department chair'],
+        },
+        {
+            definition: '主席(职位)',
+            frequency: 30,
+            examples: ['committee chair', 'department chair'],
+        },
+    ]);
+
+    // 句法结构数据
+    const syntaxPatterns = ref([
+        {
+            structure: 'get + 名词',
+            frequency: 25,
+            examples: ['get a book', 'get the message'],
+        },
+        {
+            structure: 'get + 形容词',
+            frequency: 15,
+            examples: ['get angry', 'get excited'],
+        },
+    ]);
+
+    // KWIC数据
+    const kwicData = ref([]);
+    const currentPage = ref(1);
+    const pageSize = ref(10);
+    const total = ref(100);
     // 表格数据
     //修改表格排序
     const tableData = [
@@ -75,13 +110,18 @@
             right: '10',
         },
     ];
-    //分页条数据模型
-    const pageNum = ref(1); //当前页
-    const total = ref(20); //总条数
 
-    //当前页码发生变化，调用此函数
-    const onCurrentChange = num => {
-        pageNum.value = num;
+    // 处理搜索
+    const handleSearch = () => {
+        if (!searchWord.value) return;
+        hasSearchResult.value = true;
+        // TODO: 调用API获取分析结果
+    };
+
+    // 处理分页
+    const handlePageChange = (page: number) => {
+        currentPage.value = page;
+        // TODO: 获取对应页的数据
     };
     // 筛选框的复选内容数组
     const Filters = [
@@ -123,298 +163,677 @@
     // 控制 Popover 显示状态
     const isNodePopoverVisible = ref(false);
 
-    // 单选框的选项
-    const nodeOptions = [
-        { text: '无筛选', value: '无筛选' },
-        { text: '词义搭配', value: '词义搭配' },
-        { text: '句法结构', value: '句法结构' },
-        { text: '语义倾向', value: '语义倾向' },
-    ];
+    // 添加词汇用法数据
+    const vocabUsageData = ref([
+        {
+            subject: 'The chair',
+            adverbOrModal: 'usually',
+            adjective: 'comfortable',
+            none: '',
+        },
+        {
+            subject: 'He',
+            adverbOrModal: 'will',
+            adjective: '',
+            none: 'chairs',
+        },
+        {
+            subject: 'They',
+            adverbOrModal: 'might',
+            adjective: 'wooden',
+            none: '',
+        },
+    ]);
 
-    // 存储选中的单选框值
-    const selectedNode = ref('无筛选');
+    // 控制弹窗显示
+    const dialogVisible = ref(false);
+    // 分页参数
+    const dialogCurrentPage = ref(1);
+    const dialogPageSize = ref(10);
+
+    // 计算分页后的数据
+    const paginatedData = computed(() => {
+        const start = (dialogCurrentPage.value - 1) * dialogPageSize.value;
+        const end = start + dialogPageSize.value;
+        return vocabUsageData.value.slice(start, end);
+    });
+
+    // 处理分页变化
+    const handleDialogPageChange = (val: number) => {
+        dialogCurrentPage.value = val;
+    };
 </script>
 
 <template>
-    <el-card class="KWIC-container">
-        <template #header>
-            <div class="header">
-                <h2>KWIC</h2>
-            </div>
-        </template>
-
-        <!-- node搜索框 -->
-        <div class="node-search">
-            <el-input
-                v-model="words"
-                style="max-width: 600px"
-                placeholder="Please input"
-                size="large"
-            >
-                <template #append>
-                    <el-button
-                        class="search-button"
-                        type="primary"
-                        :icon="Search"
-                        @click="onSearch"
-                        >Search</el-button
-                    >
-                </template>
-            </el-input>
-        </div>
-        <!-- KWIC结果表格 -->
-        <!-- 对于上下文的筛选条件，是否需要设置Ln为第几个词的意思？
-        是否具有现实的研究意义？
-        还是可以直接设置为前/后几个词？ -->
-        <div class="search-result">
-            <el-table
-                :data="tableData"
-                stripe
-                style="width: 80%"
-                :border="true"
-                margin-left="200px"
-            >
-                <el-table-column prop="file" label="File" :width="100" />
-                <el-table-column prop="left" label="Left">
-                    <!-- 自定义表头内容 -->
-                    <template #header>
-                        <div
-                            style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                            "
-                        >
-                            <!-- 标题 -->
-                            <span>Left</span>
-
-                            <!-- 筛选按钮 -->
-                            <el-popover
-                                placement="bottom"
-                                trigger="click"
-                                width="200"
-                                v-model:visible="isLeftPopoverVisible"
-                            >
-                                <template #reference>
-                                    <el-button
-                                        size="default"
-                                        type="info"
-                                        plain
-                                        :icon="Filter"
-                                        circle
-                                    ></el-button>
-                                </template>
-
-                                <!-- 筛选内容：复选框组 -->
-                                <el-checkbox-group
-                                    v-model="selectedLeftFilters"
-                                >
-                                    <el-checkbox
-                                        v-for="item in Filters"
-                                        :key="item.value"
-                                        :label="item.value"
-                                    >
-                                        {{ item.text }}
-                                    </el-checkbox>
-                                </el-checkbox-group>
-
-                                <!-- 筛选操作按钮：两端分布 -->
-                                <div style="display: flex; margin-top: 10px">
-                                    <el-button
-                                        size="small"
-                                        @click="clearLeftFilter"
-                                        >清空</el-button
-                                    >
-                                    <el-button
-                                        size="small"
-                                        type="primary"
-                                        @click="applyFilter"
-                                        >确定</el-button
-                                    >
-                                </div>
-                            </el-popover>
-                        </div>
+    <div class="kwic-analysis">
+        <!-- 搜索区域 -->
+        <el-card class="search-card" shadow="hover">
+            <div class="search-area">
+                <h2>KWIC智能分析</h2>
+                <el-input
+                    v-model="searchWord"
+                    placeholder="请输入检索词"
+                    class="search-input"
+                    size="large"
+                >
+                    <template #append>
+                        <el-button :icon="Search" @click="handleSearch">
+                            Search
+                        </el-button>
                     </template>
-                </el-table-column>
+                </el-input>
+            </div>
+        </el-card>
 
-                <!-- Node列 -->
-                <el-table-column prop="node" label="Node" :width="200">
-                    <!-- 自定义表头内容 -->
-                    <template #header>
-                        <div
-                            style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                            "
+        <!-- 分析结果展示区 -->
+        <div class="analysis-cards" v-if="hasSearchResult">
+            <!-- 语义分析卡片 -->
+            <el-card class="analysis-card" shadow="hover">
+                <template #header>
+                    <div class="card-header">
+                        <h3>
+                            <el-icon><Aim /></el-icon> 词义分析
+                        </h3>
+                        <el-tag
+                            >共找到 {{ semanticResults.length }} 种词义</el-tag
                         >
-                            <span>Node</span>
-
-                            <!-- 选择按钮 -->
-                            <el-popover
-                                placement="bottom"
-                                trigger="click"
-                                v-model:visible="isNodePopoverVisible"
-                            >
-                                <!-- 按钮触发器 -->
-                                <template #reference>
-                                    <el-button
-                                        size="default"
-                                        type="info"
-                                        plain
-                                        :icon="Aim"
-                                        circle
-                                    ></el-button>
-                                </template>
-
-                                <!-- 单选框内容 -->
-                                <div>
-                                    <el-radio-group
-                                        v-model="selectedNode"
-                                        size="default"
+                    </div>
+                </template>
+                <div class="semantic-list">
+                    <el-collapse>
+                        <el-collapse-item
+                            v-for="(meaning, index) in semanticResults"
+                            :key="index"
+                        >
+                            <template #title>
+                                <div class="meaning-header">
+                                    <span class="meaning-title">
+                                        释义 {{ index + 1 }}:
+                                        {{ meaning.definition }}
+                                    </span>
+                                    <el-tag
+                                        size="small"
+                                        effect="plain"
+                                        class="example-tag"
                                     >
-                                        <el-radio
-                                            v-for="item in nodeOptions"
+                                        使用频率: {{ meaning.frequency }}
+                                    </el-tag>
+                                </div>
+                            </template>
+                            <div class="examples">
+                                <p
+                                    v-for="(example, idx) in meaning.examples"
+                                    :key="idx"
+                                    class="example-item"
+                                >
+                                    {{ example }}
+                                </p>
+                            </div>
+                        </el-collapse-item>
+                    </el-collapse>
+                </div>
+            </el-card>
+
+            <!-- 词汇用法总结卡片 -->
+            <el-card class="analysis-card vocab-usage-card" shadow="hover">
+                <template #header>
+                    <div class="card-header">
+                        <div class="header-left">
+                            <h3>
+                                <el-icon><Connection /></el-icon> 词汇用法总结
+                            </h3>
+                        </div>
+                        <div class="header-right">
+                            <el-button
+                                class="fullscreen-btn"
+                                type="default"
+                                :icon="FullScreen"
+                                circle
+                                @click="dialogVisible = true"
+                            />
+                        </div>
+                    </div>
+                </template>
+
+                <div class="vocab-usage-table scrollable">
+                    <el-table
+                        :data="vocabUsageData"
+                        style="width: 120%"
+                        :border="true"
+                        stripe
+                        height="300"
+                    >
+                        <el-table-column prop="subject" label="Subject" />
+                        <el-table-column
+                            prop="adverbOrModal"
+                            label="Adverb/Modal"
+                        />
+                        <el-table-column prop="adjective" label="Adjective" />
+                        <el-table-column prop="none" label="None" />
+                    </el-table>
+                </div>
+            </el-card>
+
+            <!-- 全屏弹窗 -->
+            <el-dialog
+                v-model="dialogVisible"
+                title="词汇用法总结"
+                fullscreen
+                :show-close="true"
+            >
+                <el-table
+                    :data="paginatedData"
+                    style="width: 100%"
+                    :border="true"
+                    stripe
+                >
+                    <el-table-column prop="subject" label="Subject" />
+                    <el-table-column
+                        prop="adverbOrModal"
+                        label="Adverb/Modal"
+                    />
+                    <el-table-column prop="adjective" label="Adjective" />
+                    <el-table-column prop="none" label="None" />
+                </el-table>
+
+                <div class="dialog-pagination">
+                    <el-pagination
+                        v-model:current-page="dialogCurrentPage"
+                        :page-size="dialogPageSize"
+                        :total="vocabUsageData.length"
+                        @current-change="handleDialogPageChange"
+                        layout="total, prev, pager, next"
+                    />
+                </div>
+            </el-dialog>
+
+            <!-- 句法结构分析卡片 -->
+            <el-card class="analysis-card syntax-card" shadow="hover">
+                <template #header>
+                    <div class="card-header">
+                        <h3>
+                            <el-icon><Connection /></el-icon> 句法结构分析
+                        </h3>
+                        <el-tag type="info"
+                            >共{{ syntaxPatterns.length }}种结构</el-tag
+                        >
+                    </div>
+                </template>
+                <div class="syntax-list">
+                    <el-collapse>
+                        <el-collapse-item
+                            v-for="(pattern, index) in syntaxPatterns"
+                            :key="index"
+                            class="syntax-item"
+                        >
+                            <template #title>
+                                <div class="syntax-header">
+                                    <div class="syntax-info">
+                                        <span class="pattern-title">{{
+                                            pattern.structure
+                                        }}</span>
+                                        <el-tag
+                                            size="small"
+                                            type="success"
+                                            effect="plain"
+                                        >
+                                            {{ pattern.frequency }}次
+                                        </el-tag>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="example-list">
+                                <div
+                                    v-for="(
+                                        example, idx
+                                    ) in pattern.examples.slice(0, 3)"
+                                    :key="idx"
+                                    class="example-card"
+                                >
+                                    <span class="example-text">{{
+                                        example
+                                    }}</span>
+                                </div>
+                            </div>
+                        </el-collapse-item>
+                    </el-collapse>
+                </div>
+            </el-card>
+        </div>
+
+        <!-- KWIC详情表格 -->
+        <el-card class="kwic-table-card" shadow="hover" v-if="hasSearchResult">
+            <div class="search-result">
+                <el-table
+                    :data="tableData"
+                    stripe
+                    style="width: 100%"
+                    :border="true"
+                    margin-left="200px"
+                >
+                    <el-table-column prop="file" label="File" :width="100" />
+                    <el-table-column prop="left" label="Left Context">
+                        <!-- 自定义表头内容 -->
+                        <template #header>
+                            <div
+                                style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                "
+                            >
+                                <!-- 标题 -->
+                                <span>Left Context</span>
+
+                                <!-- 筛选按钮 -->
+                                <el-popover
+                                    placement="bottom"
+                                    trigger="click"
+                                    width="200"
+                                    v-model:visible="isLeftPopoverVisible"
+                                >
+                                    <template #reference>
+                                        <el-button
+                                            size="default"
+                                            type="info"
+                                            plain
+                                            :icon="Filter"
+                                            circle
+                                        ></el-button>
+                                    </template>
+
+                                    <!-- 筛选内容：复选框组 -->
+                                    <el-checkbox-group
+                                        v-model="selectedLeftFilters"
+                                    >
+                                        <el-checkbox
+                                            v-for="item in Filters"
                                             :key="item.value"
                                             :label="item.value"
                                         >
                                             {{ item.text }}
-                                        </el-radio>
-                                    </el-radio-group>
-                                </div>
-                                <div
-                                    style="
-                                        display: flex;
-                                        justify-content: center;
-                                        margin-top: 10px;
-                                    "
-                                >
-                                    <el-button
-                                        size="small"
-                                        type="primary"
-                                        @click="isNodePopoverVisible = false"
+                                        </el-checkbox>
+                                    </el-checkbox-group>
+
+                                    <!-- 筛选操作按钮：两端分布 -->
+                                    <div
+                                        style="display: flex; margin-top: 10px"
                                     >
-                                        确定
-                                    </el-button>
-                                </div>
-                            </el-popover>
-                        </div>
-                    </template>
-                </el-table-column>
+                                        <el-button
+                                            size="small"
+                                            @click="clearLeftFilter"
+                                            >清空</el-button
+                                        >
+                                        <el-button
+                                            size="small"
+                                            type="primary"
+                                            @click="applyFilter"
+                                            >确定</el-button
+                                        >
+                                    </div>
+                                </el-popover>
+                            </div>
+                        </template>
+                    </el-table-column>
 
-                <el-table-column prop="right" label="Right">
-                    <!-- 自定义表头内容 -->
-                    <template #header>
-                        <div
-                            style="
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                            "
-                        >
-                            <!-- 标题 -->
-                            <span>Right</span>
+                    <!-- Node列 -->
+                    <el-table-column prop="node" label="Node" :width="200">
+                        <!-- 自定义表头内容 -->
+                    </el-table-column>
 
-                            <!-- 筛选按钮 -->
-                            <el-popover
-                                placement="bottom"
-                                trigger="click"
-                                width="200"
-                                v-model:visible="isRightPopoverVisible"
+                    <el-table-column prop="right" label="Right Context">
+                        <!-- 自定义表头内容 -->
+                        <template #header>
+                            <div
+                                style="
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                "
                             >
-                                <template #reference>
-                                    <el-button
-                                        size="default"
-                                        type="info"
-                                        plain
-                                        :icon="Filter"
-                                        circle
-                                    ></el-button>
-                                </template>
+                                <!-- 标题 -->
+                                <span>Right Context</span>
 
-                                <!-- 筛选内容：复选框组 -->
-                                <el-checkbox-group
-                                    v-model="selectedRightFilters"
+                                <!-- 筛选按钮 -->
+                                <el-popover
+                                    placement="bottom"
+                                    trigger="click"
+                                    width="200"
+                                    v-model:visible="isRightPopoverVisible"
                                 >
-                                    <el-checkbox
-                                        v-for="item in Filters"
-                                        :key="item.value"
-                                        :label="item.value"
-                                    >
-                                        {{ item.text }}
-                                    </el-checkbox>
-                                </el-checkbox-group>
+                                    <template #reference>
+                                        <el-button
+                                            size="default"
+                                            type="info"
+                                            plain
+                                            :icon="Filter"
+                                            circle
+                                        ></el-button>
+                                    </template>
 
-                                <!-- 筛选操作按钮：两端分布 -->
-                                <div style="display: flex; margin-top: 10px">
-                                    <el-button
-                                        size="small"
-                                        @click="clearRightFilter"
-                                        >清空</el-button
+                                    <!-- 筛选内容：复选框组 -->
+                                    <el-checkbox-group
+                                        v-model="selectedRightFilters"
                                     >
-                                    <el-button
-                                        size="small"
-                                        type="primary"
-                                        @click="applyFilter"
-                                        >确定</el-button
+                                        <el-checkbox
+                                            v-for="item in Filters"
+                                            :key="item.value"
+                                            :label="item.value"
+                                        >
+                                            {{ item.text }}
+                                        </el-checkbox>
+                                    </el-checkbox-group>
+
+                                    <!-- 筛选操作按钮：两端分布 -->
+                                    <div
+                                        style="display: flex; margin-top: 10px"
                                     >
-                                </div>
-                            </el-popover>
-                        </div>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </div>
-        <!-- 分页条 -->
-        <el-pagination
-            v-model:current-page="pageNum"
-            layout="jumper, total, prev, pager, next"
-            background
-            :total="total"
-            @current-change="onCurrentChange"
-            style="margin-top: 20px; justify-content: flex-end"
-        />
-    </el-card>
+                                        <el-button
+                                            size="small"
+                                            @click="clearRightFilter"
+                                            >清空</el-button
+                                        >
+                                        <el-button
+                                            size="small"
+                                            type="primary"
+                                            @click="applyFilter"
+                                            >确定</el-button
+                                        >
+                                    </div>
+                                </el-popover>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <div class="pagination">
+                    <el-pagination
+                        v-model:current-page="currentPage"
+                        :page-size="pageSize"
+                        :total="total"
+                        @current-change="handlePageChange"
+                    />
+                </div>
+            </div>
+        </el-card>
+    </div>
 </template>
+  
 
 <style scoped>
-    .node-search {
+    .kwic-analysis {
+        padding: 24px;
+        background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
+        min-height: calc(100vh - 48px);
+    }
+
+    /* 搜索区域 */
+    .search-card {
+        border-radius: 12px;
+        margin-bottom: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .search-area {
+        padding: 32px;
+        text-align: center;
+    }
+
+    .search-area h2 {
+        font-size: 28px;
+        margin-bottom: 24px;
+        letter-spacing: 1px;
+    }
+
+    .search-input {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* 分析卡片区域 */
+    .analysis-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .analysis-card {
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .analysis-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #ebeef5;
+        background: #fafbfc;
+        border-radius: 12px 12px 0 0;
         display: flex;
-        justify-content: center;
-        margin-top: 10px;
-    }
-    /* 默认按钮样式 */
-    .node-search .search-button {
-        border-radius: 4px;
-        font-weight: bold;
-        padding: 6px 16px;
-        transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    /* 悬停时的样式 */
-    .node-search .search-button:hover {
-        background-color: #b4b8bb; /* 悬停时灰色变浅 */
-        color: #fff;
-    }
-
-    /* 点击时的样式：按下按钮时缩小 */
-    .node-search .search-button:active {
-        transform: scale(0.95); /* 缩小按钮 5% */
-        background-color: #63696b; /* 点击时按钮的灰色变深 */
-    }
-    .search-result {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-    }
-    .KWIC-container {
-        min-height: 100%;
-        box-sizing: border-box;
-    }
-
-    .header {
+    .header-left {
         display: flex;
         align-items: center;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .fullscreen-btn {
+        transition: all 0.3s;
+    }
+
+    .fullscreen-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .card-header h3 {
+        font-size: 18px;
+        color: #303133;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    :deep(.el-icon) {
+        font-size: 20px;
+        color: #409eff;
+    }
+
+    /* 列表样式 */
+    :deep(.el-collapse) {
+        border: none;
+    }
+
+    :deep(.el-collapse-item__header) {
+        background: transparent;
+        border: none;
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    :deep(.el-collapse-item__wrap) {
+        background: transparent;
+        border: none;
+    }
+
+    .example-item {
+        padding: 12px 16px;
+        margin: 8px 0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        color: #606266;
+        transition: background-color 0.3s;
+    }
+
+    .example-item:hover {
+        background: #eef2f6;
+    }
+
+    /* 表格区域 */
+    .kwic-table-card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    :deep(.el-table) {
+        --el-table-header-bg-color: #fafbfc;
+        --el-table-border-color: #ebeef5;
+    }
+
+    :deep(.el-table th) {
+        background: var(--el-table-header-bg-color);
+        font-weight: 600;
+        color: #303133;
+    }
+
+    /* 响应式布局 */
+    @media screen and (max-width: 1400px) {
+        .analysis-cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .analysis-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .search-area h2 {
+            font-size: 24px;
+        }
+    }
+
+    /* 句法分析卡片样式 */
+    .syntax-card {
+        height: 100%;
+    }
+
+    .syntax-header {
+        width: 100%;
+        display: flex;
         justify-content: space-between;
+        align-items: center;
+    }
+
+    .syntax-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .pattern-title {
+        font-weight: 500;
+        color: #303133;
+    }
+
+    .example-list {
+        padding: 8px 0;
+    }
+
+    .example-card {
+        padding: 12px 16px;
+        margin: 8px 0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .example-card:hover {
+        background: #eef2f6;
+        transform: translateX(4px);
+    }
+
+    .example-text {
+        color: #606266;
+        font-size: 14px;
+    }
+
+    :deep(.el-collapse-item__header) {
+        font-size: 15px;
+        padding: 12px 16px;
+        background: #fafbfc;
+        border-radius: 6px;
+    }
+
+    :deep(.el-collapse-item__content) {
+        padding: 16px;
+    }
+
+    :deep(.el-collapse-item__wrap) {
+        background: transparent;
+    }
+
+    /* 词汇用法总结卡片样式 */
+    .vocab-usage-card {
+        height: 100%;
+    }
+
+    .vocab-usage-table {
+        margin-top: 12px;
+    }
+
+    :deep(.el-table) {
+        --el-table-header-bg-color: #f5f7fa;
+        --el-table-border-color: #ebeef5;
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 13px; /* 设置整体字体大小 */
+    }
+
+    :deep(.el-table th) {
+        background: var(--el-table-header-bg-color);
+        color: #303133;
+        font-weight: 600;
+        padding: 8px 0; /* 减小内边距 */
+        font-size: 13px; /* 设置表头字体大小 */
+    }
+
+    :deep(.el-table td) {
+        padding: 8px; /* 减小内边距 */
+        color: #606266;
+        font-size: 12px; /* 设置单元格字体大小 */
+        line-height: 1.4; /* 调整行高 */
+    }
+
+    :deep(.el-table--small) {
+        font-size: 12px;
+    }
+
+    .card-header-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .scrollable {
+        overflow-y: auto;
+        max-height: 300px;
+    }
+
+    .dialog-pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    :deep(.el-dialog__body) {
+        padding: 20px;
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    :deep(.el-table) {
+        flex: 1;
     }
 </style>

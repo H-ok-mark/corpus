@@ -65,6 +65,7 @@
             v-model="importDialogVisible"
             title="导入语料库"
             width="500px"
+            class="import-dialog"
         >
             <el-form
                 :model="corpusForm"
@@ -284,5 +285,97 @@
 
     .el-form-item:last-child {
         margin-bottom: 0;
+    }
+
+    /* 对话框样式 */
+    .import-dialog :deep(.el-dialog__header) {
+        margin: 0;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        background: #f5f7fa;
+    }
+
+    .import-dialog :deep(.el-dialog__body) {
+        padding: 24px;
+    }
+
+    .import-dialog :deep(.el-dialog__footer) {
+        padding: 16px 24px;
+        border-top: 1px solid var(--el-border-color-lighter);
+    }
+
+    /* 表单样式 */
+    :deep(.el-form-item__label) {
+        font-weight: 500;
+    }
+
+    :deep(.el-input__wrapper),
+    :deep(.el-textarea__inner) {
+        transition: all 0.3s;
+    }
+
+    :deep(.el-input__wrapper:hover),
+    :deep(.el-textarea__inner:hover) {
+        box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+    }
+
+    /* 上传区域样式 */
+    .upload-demo {
+        width: 100%;
+    }
+
+    :deep(.el-upload-dragger) {
+        width: 100%;
+        height: 180px;
+        padding: 20px;
+        background: #fafafa;
+        border: 2px dashed #e4e7ed;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    :deep(.el-upload-dragger:hover) {
+        border-color: var(--el-color-primary);
+        background: #f0f7ff;
+    }
+
+    .el-icon--upload {
+        font-size: 48px;
+        color: var(--el-color-primary);
+        margin-bottom: 12px;
+    }
+
+    .el-upload__text {
+        color: #606266;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .el-upload__text em {
+        color: var(--el-color-primary);
+        font-style: normal;
+        cursor: pointer;
+    }
+
+    .el-upload__tip {
+        margin-top: 8px;
+        font-size: 13px;
+        color: #909399;
+        line-height: 1.4;
+    }
+
+    .dialog-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    :deep(.el-button) {
+        padding: 8px 20px;
+        transition: all 0.3s;
+    }
+
+    :deep(.el-button--primary) {
+        font-weight: 500;
     }
 </style>
