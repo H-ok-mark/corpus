@@ -16,6 +16,19 @@
         Compass,
     } from '@element-plus/icons-vue';
     import avatar from '@/assets/default.png';
+    import { useRouter } from 'vue-router';
+    const router = useRouter();
+
+    const handleCommand = command => {
+        if (command === 'logout') {
+            // TODO: 清除登录状态
+            localStorage.removeItem('token');
+            router.push('/login');
+        }
+        if (command === 'user-corpus') {
+            router.push('/corpus/users');
+        }
+    };
 </script>
 
 <template>
@@ -89,7 +102,7 @@
                     <strong> </strong>
                 </div>
                 <!-- 头像区域 -->
-                <el-dropdown placement="bottom-end">
+                <el-dropdown placement="bottom-end" @command="handleCommand">
                     <span class="el-dropdown__box">
                         <el-avatar :src="avatar" />
                         <el-icon>
@@ -98,14 +111,10 @@
                     </span>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item command="profile" :icon="User"
-                                >基本资料</el-dropdown-item
-                            >
-                            <el-dropdown-item command="avatar" :icon="Crop"
-                                >更换头像</el-dropdown-item
-                            >
-                            <el-dropdown-item command="password" :icon="EditPen"
-                                >重置密码</el-dropdown-item
+                            <el-dropdown-item
+                                command="user-corpus"
+                                :icon="Notebook"
+                                >语料库</el-dropdown-item
                             >
                             <el-dropdown-item
                                 command="logout"
