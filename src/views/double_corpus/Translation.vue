@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
     import { ref } from 'vue';
     import { Search } from '@element-plus/icons-vue';
@@ -59,44 +58,53 @@
         pageNum.value = num;
     };
 
-    // 上传文件--单文档
-    const fileList = ref<UploadUserFile[]>([
-        {
-            name: 'element-plus-logo.svg',
-            url: 'https://element-plus.org/images/element-plus-logo.svg',
-        },
-        {
-            name: 'element-plus-logo2.svg',
-            url: 'https://element-plus.org/images/element-plus-logo.svg',
-        },
-    ]);
-
-    const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) => {
-        console.log(file, uploadFiles);
+    // 文件列表状态
+    const singleDocFileList = ref<UploadUserFile[]>([]);
+    const doubleDocFileList = {
+        english: ref<UploadUserFile[]>([]),
+        chinese: ref<UploadUserFile[]>([]),
     };
 
-    const handlePreview: UploadProps['onPreview'] = uploadFile => {
-        console.log(uploadFile);
+    // 上传配置
+    const uploadConfig = {
+        action: 'https://api.example.com/upload',
+        accept: '.doc,.docx,.pdf,.xlsx,.xls',
+        limit: 1,
     };
 
-    const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
-        ElMessage.warning(
-            `The limit is 2, you selected ${
-                files.length
-            } files this time, add up to ${
-                files.length + uploadFiles.length
-            } totally`
-        );
+    // 文件上传处理函数
+    const handleSingleUploadSuccess = () => {
+        ElMessage.success('单文档上传成功');
     };
 
-    const beforeRemove: UploadProps['beforeRemove'] = (uploadFile, uploadFiles) => {
-        return ElMessageBox.confirm(
-            `Cancel the transfer of ${uploadFile.name} ?`
-        ).then(
-            () => true,
-            () => false
-        );
+    const handleDoubleUploadSuccess = (type: 'english' | 'chinese') => {
+        ElMessage.success(`${type === 'english' ? '英文' : '中文'}文档上传成功`);
     };
+
+    // 开始对齐处理
+    const handleStartAlignment = async (mode: 'single' | 'double') => {
+        if (mode === 'single' && !singleDocFileList.value.length) {
+            ElMessage.warning('请先上传文件');
+            return;
+        }
+        if (
+            mode === 'double' &&
+            (!doubleDocFileList.english.value.length ||
+                !doubleDocFileList.chinese.value.length)
+        ) {
+            ElMessage.warning('请上传英文和中文文档');
+            return;
+        }
+
+        try {
+            // TODO: 调用对齐API
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            ElMessage.success('对齐完成');
+        } catch (error) {
+            ElMessage.error('对齐失败');
+        }
+    };
+
     //单/双文档选择
     const simple = ref(true);
     //单/双文档选项
@@ -122,58 +130,52 @@
         </div>
         <!-- 单文档对齐 -->
         <div class="simple-file" v-if="simple">
-            <!-- 文件上传 -->
             <el-upload
-                v-model:file-list="fileList"
-                class="upload-demo"
-                action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-                multiple
-                :on-preview="handlePreview"
-                :on-remove="handleRemove"
-                :before-remove="beforeRemove"
-                :limit="2"
-                :on-exceed="handleExceed"
+                v-model:file-list="singleDocFileList"
+                v-bind="uploadConfig"
+                class="upload-btn"
+                @success="handleSingleUploadSuccess"
             >
-                <el-button type="primary" plain>Click to upload</el-button>
+                <el-button type="primary">上传文档</el-button>
                 <template #tip>
-                    <div class="el-upload__tip" text-align:center>
-                        Only excel, word, and pdf are supported
-                    </div>
+                    <div class="upload-tip">支持 Word、Excel、PDF 格式</div>
                 </template>
             </el-upload>
-
-            <!-- 开始按钮 -->
-            <el-button type="success">begin</el-button>
+            <el-button type="success" @click="handleStartAlignment('single')"
+                >开始对齐</el-button
+            >
         </div>
+
         <!-- 双文档对齐 -->
         <div class="double-file" v-else>
-            <el-upload
-                v-model:file-list="fileList"
-                class="upload-demo"
-                action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-                multiple
-                :on-preview="handlePreview"
-                :on-remove="handleRemove"
-                :before-remove="beforeRemove"
-                :limit="2"
-                :on-exceed="handleExceed"
+            <div class="upload-group">
+                <h4>英文文档</h4>
+                <el-upload
+                    v-model:file-list="doubleDocFileList.english"
+                    v-bind="uploadConfig"
+                    class="upload-btn"
+                    @success="() => handleDoubleUploadSuccess('english')"
+                >
+                    <el-button type="primary">上传文档</el-button>
+                </el-upload>
+            </div>
+            <el-button
+                class="upload-group"
+                type="success"
+                @click="handleStartAlignment('double')"
+                >开始对齐</el-button
             >
-                <el-button type="primary" plain>Click to upload</el-button>
-            </el-upload>
-            <el-button type="success">begin</el-button>
-            <el-upload
-                v-model:file-list="fileList"
-                class="upload-demo"
-                action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-                multiple
-                :on-preview="handlePreview"
-                :on-remove="handleRemove"
-                :before-remove="beforeRemove"
-                :limit="2"
-                :on-exceed="handleExceed"
-            >
-                <el-button type="primary" plain>Click to upload</el-button>
-            </el-upload>
+            <div class="upload-group">
+                <h4>中文文档</h4>
+                <el-upload
+                    v-model:file-list="doubleDocFileList.chinese"
+                    v-bind="uploadConfig"
+                    class="upload-btn"
+                    @success="() => handleDoubleUploadSuccess('chinese')"
+                >
+                    <el-button type="primary">上传文档</el-button>
+                </el-upload>
+            </div>
         </div>
 
         <!-- 结果表格 -->
@@ -216,17 +218,36 @@
         justify-content: center;
         margin-top: 10px;
         text-align: center;
+        height: 150px;
     }
     .double-file {
         display: flex;
         justify-content: center;
         margin-top: 10px;
         text-align: center;
+        height: 150px;
     }
-
+    .upload-btn {
+        margin-left: 50px;
+        margin-right: 50px;
+    }
     .result {
         margin-top: 1px;
         display: flex;
         justify-content: center;
+    }
+    .upload-group {
+        text-align: center;
+    }
+
+    .upload-group h4 {
+        margin-bottom: 16px;
+        color: #606266;
+    }
+
+    .upload-tip {
+        font-size: 14px;
+        color: #909399;
+        margin-top: 8px;
     }
 </style>
