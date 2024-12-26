@@ -203,6 +203,7 @@
 <style scoped>
     .translation-container {
         min-height: 100%;
+        padding: 20px;
         box-sizing: border-box;
     }
     .header {

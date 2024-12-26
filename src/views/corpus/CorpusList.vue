@@ -29,6 +29,11 @@
 
 <template>
     <el-card class="corpus-container">
+        <template #header>
+            <div class="header">
+                <h2>获取语料库</h2>
+            </div>
+        </template>
         <!-- 搜索框 -->
         <div class="search-box">
             <el-input
@@ -74,11 +79,9 @@
 </template>
 
 <style scoped>
-    .index-container {
-        min-height: 100%;
-        box-sizing: border-box;
+    .corpus-container {
+        padding: 20px;
     }
-
     .header {
         display: flex;
         align-items: center;

@@ -72,7 +72,7 @@
                         <span>我的语料库</span>
                     </el-menu-item>
 
-                    <el-menu-item index="/corpus/list">
+                    <el-menu-item index="/corpus/list" id="corpusList">
                         <el-icon>
                             <Compass />
                         </el-icon>

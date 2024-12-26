@@ -1,3 +1,144 @@
+<script setup lang="ts">
+    import { ref, computed } from 'vue';
+    import { Search, Upload, UploadFilled } from '@element-plus/icons-vue';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+
+    // 数据定义
+    const searchQuery = ref('');
+    const importDialogVisible = ref(false);
+    const apply = ref(false);
+    const corpusList = ref([
+        {
+            id: 1,
+            name: '示例语料库1',
+            description: '这是一个示例语料库描述',
+            createTime: '2024-03-20 10:00:00',
+        },
+    ]);
+
+    // 计算属性：过滤后的语料库列表
+    const filteredCorpusList = computed(() => {
+        return corpusList.value.filter(
+            corpus =>
+                corpus.name
+                    .toLowerCase()
+                    .includes(searchQuery.value.toLowerCase()) ||
+                corpus.description
+                    .toLowerCase()
+                    .includes(searchQuery.value.toLowerCase())
+        );
+    });
+
+    // 方法定义
+    const showImportDialog = () => {
+        importDialogVisible.value = true;
+    };
+
+    const handleSearch = () => {
+        // 实现搜索逻辑
+    };
+
+    const handleEdit = (row: any) => {
+        ElMessageBox.confirm('确定要应用这个语料库吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'info',
+        })
+            .then(() => {
+                // 实现删除逻辑
+                ElMessage.success('应用成功');
+                apply.value = true;
+            })
+            .catch(() => {
+                ElMessage.info('已取消应用');
+            });
+    };
+
+    const handleDelete = (row: any) => {
+        ElMessageBox.confirm('确定要删除这个语料库吗？', '警告', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        })
+            .then(() => {
+                // 实现删除逻辑
+                ElMessage.success('删除成功');
+            })
+            .catch(() => {
+                ElMessage.info('已取消删除');
+            });
+    };
+
+    const handleCancel = (row: any) => {
+        ElMessageBox.confirm('确定要取消应用这个语料库吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'info',
+        })
+            .then(() => {
+                // 实现删除逻辑
+                ElMessage.success('取消应用成功');
+                apply.value = false;
+            })
+            .catch(() => {
+                ElMessage.info('已取消操作');
+            });
+    };
+
+    const handleUploadSuccess = (response: any, file: any) => {
+        corpusForm.value.files.push(file);
+        ElMessage.success('文件上传成功');
+    };
+
+    const handleUploadError = () => {
+        ElMessage.error('上传失败');
+    };
+
+    // 表单数据
+    const corpusFormRef = ref();
+    const corpusForm = ref({
+        name: '',
+        description: '',
+        files: [],
+    });
+
+    // 表单验证规则
+    const rules = {
+        name: [
+            { required: true, message: '请输入语料库名称', trigger: 'blur' },
+            { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' },
+        ],
+        description: [
+            { required: true, message: '请输入语料库描述', trigger: 'blur' },
+            { max: 200, message: '描述不能超过200个字符', trigger: 'blur' },
+        ],
+    };
+
+    // 提交表单
+    const submitForm = () => {
+        if (!corpusFormRef.value) return;
+
+        corpusFormRef.value.validate((valid: boolean) => {
+            if (valid) {
+                // TODO: 实现提交逻辑
+                ElMessage.success('创建成功');
+                importDialogVisible.value = false;
+                resetForm();
+            }
+        });
+    };
+
+    // 重置表单
+    const resetForm = () => {
+        corpusForm.value = {
+            name: '',
+            description: '',
+            files: [],
+        };
+        corpusFormRef.value?.resetFields();
+    };
+</script>
+
 <template>
     <div class="corpus-container">
         <el-card class="main-card">
@@ -38,13 +179,23 @@
                     />
                     <el-table-column fixed="right" label="操作" width="180">
                         <template #default="scope">
-                            <el-button-group>
+                            <!-- 应用成功 -->
+                            <el-button
+                                v-if="apply"
+                                type="success"
+                                size="default"
+                                @click="handleCancel(scope.row)"
+                            >
+                                取消应用
+                            </el-button>
+                            <!-- 未应用 -->
+                            <el-button-group v-else>
                                 <el-button
                                     type="primary"
                                     size="default"
                                     @click="handleEdit(scope.row)"
                                 >
-                                    编辑
+                                    应用
                                 </el-button>
                                 <el-button
                                     type="danger"
@@ -127,126 +278,16 @@
     </div>
 </template>
 
-<script setup lang="ts">
-    import { ref, computed } from 'vue';
-    import { Search, Upload, UploadFilled } from '@element-plus/icons-vue';
-    import { ElMessage, ElMessageBox } from 'element-plus';
 
-    // 数据定义
-    const searchQuery = ref('');
-    const importDialogVisible = ref(false);
-    const corpusList = ref([
-        {
-            id: 1,
-            name: '示例语料库1',
-            description: '这是一个示例语料库描述',
-            createTime: '2024-03-20 10:00:00',
-        },
-    ]);
-
-    // 计算属性：过滤后的语料库列表
-    const filteredCorpusList = computed(() => {
-        return corpusList.value.filter(
-            corpus =>
-                corpus.name
-                    .toLowerCase()
-                    .includes(searchQuery.value.toLowerCase()) ||
-                corpus.description
-                    .toLowerCase()
-                    .includes(searchQuery.value.toLowerCase())
-        );
-    });
-
-    // 方法定义
-    const showImportDialog = () => {
-        importDialogVisible.value = true;
-    };
-
-    const handleSearch = () => {
-        // 实现搜索逻辑
-    };
-
-    const handleEdit = (row: any) => {
-        console.log('编辑:', row);
-    };
-
-    const handleDelete = (row: any) => {
-        ElMessageBox.confirm('确定要删除这个语料库吗？', '警告', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        })
-            .then(() => {
-                // 实现删除逻辑
-                ElMessage.success('删除成功');
-            })
-            .catch(() => {
-                ElMessage.info('已取消删除');
-            });
-    };
-
-    const handleUploadSuccess = (response: any, file: any) => {
-        corpusForm.value.files.push(file);
-        ElMessage.success('文件上传成功');
-    };
-
-    const handleUploadError = () => {
-        ElMessage.error('上传失败');
-    };
-
-    // 表单数据
-    const corpusFormRef = ref();
-    const corpusForm = ref({
-        name: '',
-        description: '',
-        files: [],
-    });
-
-    // 表单验证规则
-    const rules = {
-        name: [
-            { required: true, message: '请输入语料库名称', trigger: 'blur' },
-            { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' },
-        ],
-        description: [
-            { required: true, message: '请输入语料库描述', trigger: 'blur' },
-            { max: 200, message: '描述不能超过200个字符', trigger: 'blur' },
-        ],
-    };
-
-    // 提交表单
-    const submitForm = () => {
-        if (!corpusFormRef.value) return;
-
-        corpusFormRef.value.validate((valid: boolean) => {
-            if (valid) {
-                // TODO: 实现提交逻辑
-                ElMessage.success('创建成功');
-                importDialogVisible.value = false;
-                resetForm();
-            }
-        });
-    };
-
-    // 重置表单
-    const resetForm = () => {
-        corpusForm.value = {
-            name: '',
-            description: '',
-            files: [],
-        };
-        corpusFormRef.value?.resetFields();
-    };
-</script>
 
 <style scoped>
     .corpus-container {
-        padding: 20px;
         background-color: #f5f7fa;
         min-height: 100vh;
     }
 
     .main-card {
+        padding: 20px;
         min-height: calc(100vh - 40px);
     }
 

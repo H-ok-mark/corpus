@@ -1,15 +1,6 @@
 <script setup lang="ts">
     import { ref } from 'vue';
-    import {
-        Document,
-        Search,
-        Connection,
-        Cpu,
-        DataLine,
-        Reading,
-        Edit,
-        Share,
-    } from '@element-plus/icons-vue';
+    import { Document, Connection, Cpu, DataLine } from '@element-plus/icons-vue';
 
     // 核心功能模块
     const coreFeatures = ref([

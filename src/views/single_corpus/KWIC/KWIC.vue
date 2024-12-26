@@ -8,6 +8,9 @@
         Filter,
         Download,
         FullScreen,
+        Star,
+        DataLine,
+        Operation,
     } from '@element-plus/icons-vue';
 
     // 搜索词
@@ -18,18 +21,12 @@
     const semanticResults = ref([
         {
             definition: '椅子(家具)',
-            frequency: 45,
-            examples: ['wooden chair', 'comfortable chair'],
         },
         {
             definition: '主席(职位)',
-            frequency: 30,
-            examples: ['committee chair', 'department chair'],
         },
         {
-            definition: '主席(职位)',
-            frequency: 30,
-            examples: ['committee chair', 'department chair'],
+            definition: '教授(职位)',
         },
     ]);
 
@@ -37,13 +34,9 @@
     const syntaxPatterns = ref([
         {
             structure: 'get + 名词',
-            frequency: 25,
-            examples: ['get a book', 'get the message'],
         },
         {
             structure: 'get + 形容词',
-            frequency: 15,
-            examples: ['get angry', 'get excited'],
         },
     ]);
 
@@ -202,6 +195,40 @@
     const handleDialogPageChange = (val: number) => {
         dialogCurrentPage.value = val;
     };
+
+    // 加载状态控制
+    const semanticLoading = ref(false);
+    const vocabLoading = ref(false);
+    const syntaxLoading = ref(false);
+
+    // 内容显示控制
+    const showSemanticContent = ref(false);
+    const showVocabContent = ref(false);
+    const showSyntaxContent = ref(false);
+
+    // 处理开始分析点击事件
+    const handleStartAnalysis = async (type: string) => {
+        switch (type) {
+            case 'semantic':
+                semanticLoading.value = true;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                showSemanticContent.value = true;
+                semanticLoading.value = false;
+                break;
+            case 'vocab':
+                vocabLoading.value = true;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                showVocabContent.value = true;
+                vocabLoading.value = false;
+                break;
+            case 'syntax':
+                syntaxLoading.value = true;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                showSyntaxContent.value = true;
+                syntaxLoading.value = false;
+                break;
+        }
+    };
 </script>
 
 <template>
@@ -227,90 +254,112 @@
 
         <!-- 分析结果展示区 -->
         <div class="analysis-cards" v-if="hasSearchResult">
-            <!-- 语义分析卡片 -->
-            <el-card class="analysis-card" shadow="hover">
+            <!-- 词义分析卡片 -->
+            <el-card class="semantic-card" shadow="hover">
                 <template #header>
                     <div class="card-header">
                         <h3>
                             <el-icon><Aim /></el-icon> 词义分析
                         </h3>
-                        <el-tag
-                            >共找到 {{ semanticResults.length }} 种词义</el-tag
-                        >
+                        <h4>
+                            <el-tag type="info" size="large"
+                                >共{{ semanticResults.length }} 种词义</el-tag
+                            >
+                        </h4>
                     </div>
                 </template>
-                <div class="semantic-list">
-                    <el-collapse>
-                        <el-collapse-item
-                            v-for="(meaning, index) in semanticResults"
-                            :key="index"
-                        >
-                            <template #title>
-                                <div class="meaning-header">
-                                    <span class="meaning-title">
-                                        释义 {{ index + 1 }}:
-                                        {{ meaning.definition }}
-                                    </span>
-                                    <el-tag
-                                        size="small"
-                                        effect="plain"
-                                        class="example-tag"
-                                    >
-                                        使用频率: {{ meaning.frequency }}
-                                    </el-tag>
-                                </div>
-                            </template>
-                            <div class="examples">
-                                <p
-                                    v-for="(example, idx) in meaning.examples"
-                                    :key="idx"
-                                    class="example-item"
+                <div v-if="!showSemanticContent" class="card-empty">
+                    <el-button
+                        type="primary"
+                        :loading="semanticLoading"
+                        @click="handleStartAnalysis('semantic')"
+                        size="large"
+                    >
+                        开始使用
+                    </el-button>
+                </div>
+                <div v-else>
+                    <el-skeleton :loading="semanticLoading" animated :rows="3">
+                        <template #default>
+                            <div class="meaning-contain">
+                                <div
+                                    v-for="(meaning, index) in semanticResults"
+                                    :key="index"
+                                    class="meaning-item"
                                 >
-                                    {{ example }}
-                                </p>
+                                    <div class="meaning-header">
+                                        <span class="meaning-definition"
+                                            >{{ meaning.definition }}
+                                        </span>
+                                        <el-button
+                                            circle
+                                            type="default"
+                                            :icon="Search"
+                                            size="small"
+                                        ></el-button>
+                                    </div>
+                                </div>
                             </div>
-                        </el-collapse-item>
-                    </el-collapse>
+                        </template>
+                    </el-skeleton>
                 </div>
             </el-card>
 
             <!-- 词汇用法总结卡片 -->
-            <el-card class="analysis-card vocab-usage-card" shadow="hover">
+            <el-card class="vocab-usage-card" shadow="hover">
                 <template #header>
                     <div class="card-header">
-                        <div class="header-left">
-                            <h3>
-                                <el-icon><Connection /></el-icon> 词汇用法总结
-                            </h3>
-                        </div>
-                        <div class="header-right">
-                            <el-button
-                                class="fullscreen-btn"
-                                type="default"
-                                :icon="FullScreen"
-                                circle
-                                @click="dialogVisible = true"
-                            />
-                        </div>
+                        <h3>
+                            <el-icon><DataLine /></el-icon> 词汇用法总结
+                        </h3>
+                        <el-button
+                            class="fullscreen-btn"
+                            type="default"
+                            :icon="FullScreen"
+                            circle
+                            size="large"
+                            @click="dialogVisible = true"
+                        />
                     </div>
                 </template>
-
-                <div class="vocab-usage-table scrollable">
-                    <el-table
-                        :data="vocabUsageData"
-                        style="width: 120%"
-                        :border="true"
-                        stripe
-                        height="300"
+                <div v-if="!showVocabContent" class="card-empty">
+                    <el-button
+                        size="large"
+                        type="primary"
+                        :loading="vocabLoading"
+                        @click="handleStartAnalysis('vocab')"
                     >
-                        <el-table-column prop="subject" label="Subject" />
-                        <el-table-column
-                            prop="adverbOrModal"
-                            label="Adverb/Modal"
-                        />
-                        <el-table-column prop="adjective" label="Adjective" />
-                        <el-table-column prop="none" label="None" />
-                    </el-table>
+                        开始使用
+                    </el-button>
+                </div>
+                <div v-else>
+                    <el-skeleton :loading="vocabLoading" animated :rows="3">
+                        <template #default>
+                            <div class="vocab-usage-table scrollable">
+                                <el-table
+                                    :data="vocabUsageData"
+                                    style="width: 120%"
+                                    :border="true"
+                                    stripe
+                                    height="300"
+                                >
+                                    <el-table-column
+                                        prop="subject"
+                                        label="Subject"
+                                    />
+                                    <el-table-column
+                                        prop="adverbOrModal"
+                                        label="Adverb/Modal"
+                                    />
+                                    <el-table-column
+                                        prop="adjective"
+                                        label="Adjective"
+                                    />
+                                    <el-table-column prop="none" label="None" />
+                                </el-table>
+                            </div>
+                        </template>
+                    </el-skeleton>
                 </div>
             </el-card>
 
@@ -322,6 +371,7 @@
                 :show-close="true"
             >
                 <el-table
+                    class="fullScreenTable"
                     :data="paginatedData"
                     style="width: 100%"
                     :border="true"
@@ -348,55 +398,53 @@
             </el-dialog>
 
             <!-- 句法结构分析卡片 -->
-            <el-card class="analysis-card syntax-card" shadow="hover">
+            <el-card class="syntax-card" shadow="hover">
                 <template #header>
                     <div class="card-header">
                         <h3>
-                            <el-icon><Connection /></el-icon> 句法结构分析
+                            <el-icon><Operation /></el-icon> 句法结构分析
                         </h3>
-                        <el-tag type="info"
-                            >共{{ syntaxPatterns.length }}种结构</el-tag
-                        >
+                        <h4>
+                            <el-tag type="info" size="large"
+                                >共{{ syntaxPatterns.length }}种结构</el-tag
+                            >
+                        </h4>
                     </div>
                 </template>
-                <div class="syntax-list">
-                    <el-collapse>
-                        <el-collapse-item
-                            v-for="(pattern, index) in syntaxPatterns"
-                            :key="index"
-                            class="syntax-item"
-                        >
-                            <template #title>
-                                <div class="syntax-header">
-                                    <div class="syntax-info">
-                                        <span class="pattern-title">{{
-                                            pattern.structure
-                                        }}</span>
-                                        <el-tag
+                <div v-if="!showSyntaxContent" class="card-empty">
+                    <el-button
+                        type="primary"
+                        :loading="syntaxLoading"
+                        @click="handleStartAnalysis('syntax')"
+                        size="large"
+                    >
+                        开始使用
+                    </el-button>
+                </div>
+                <div v-else>
+                    <el-skeleton :loading="syntaxLoading" animated :rows="3">
+                        <template #default>
+                            <div class="syntax-list">
+                                <div
+                                    v-for="(pattern, index) in syntaxPatterns"
+                                    :key="index"
+                                    class="syntax-item"
+                                >
+                                    <div class="pattern-content">
+                                        <span class="pattern-structure"
+                                            >{{ pattern.structure }}
+                                        </span>
+                                        <el-button
+                                            circle
+                                            type="default"
+                                            :icon="Search"
                                             size="small"
-                                            type="success"
-                                            effect="plain"
-                                        >
-                                            {{ pattern.frequency }}次
-                                        </el-tag>
+                                        ></el-button>
                                     </div>
                                 </div>
-                            </template>
-                            <div class="example-list">
-                                <div
-                                    v-for="(
-                                        example, idx
-                                    ) in pattern.examples.slice(0, 3)"
-                                    :key="idx"
-                                    class="example-card"
-                                >
-                                    <span class="example-text">{{
-                                        example
-                                    }}</span>
-                                </div>
                             </div>
-                        </el-collapse-item>
-                    </el-collapse>
+                        </template>
+                    </el-skeleton>
                 </div>
             </el-card>
         </div>
@@ -422,9 +470,7 @@
                                     align-items: center;
                                 "
                             >
-                                <!-- 标题 -->
-                                <span>Left Context</span>
-
+                                <span>左边内容</span>
                                 <!-- 筛选按钮 -->
                                 <el-popover
                                     placement="bottom"
@@ -477,7 +523,7 @@
                     </el-table-column>
 
                     <!-- Node列 -->
-                    <el-table-column prop="node" label="Node" :width="200">
+                    <el-table-column prop="node" label="词" :width="200">
                         <!-- 自定义表头内容 -->
                     </el-table-column>
 
@@ -492,7 +538,7 @@
                                 "
                             >
                                 <!-- 标题 -->
-                                <span>Right Context</span>
+                                <span>右边内容</span>
 
                                 <!-- 筛选按钮 -->
                                 <el-popover
@@ -561,7 +607,6 @@
 
 <style scoped>
     .kwic-analysis {
-        padding: 24px;
         background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
         min-height: calc(100vh - 48px);
     }
@@ -597,13 +642,13 @@
         margin-bottom: 24px;
     }
 
-    .analysis-card {
+    .semantic-card {
         border-radius: 12px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         background: rgba(255, 255, 255, 0.9);
     }
 
-    .analysis-card:hover {
+    .semantic-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
@@ -615,16 +660,6 @@
         border-radius: 12px 12px 0 0;
         display: flex;
         justify-content: space-between;
-        align-items: center;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-    }
-
-    .header-right {
-        display: flex;
         align-items: center;
     }
 
@@ -643,41 +678,12 @@
         align-items: center;
         gap: 8px;
     }
-
-    :deep(.el-icon) {
-        font-size: 20px;
-        color: #409eff;
+    .begin-btn {
+        display: flex;
+        margin-left: 40%;
+        margin-top: 10%;
     }
-
-    /* 列表样式 */
-    :deep(.el-collapse) {
-        border: none;
-    }
-
-    :deep(.el-collapse-item__header) {
-        background: transparent;
-        border: none;
-        padding: 16px;
-        font-size: 15px;
-    }
-
-    :deep(.el-collapse-item__wrap) {
-        background: transparent;
-        border: none;
-    }
-
-    .example-item {
-        padding: 12px 16px;
-        margin: 8px 0;
-        background: #f8f9fa;
-        border-radius: 8px;
-        color: #606266;
-        transition: background-color 0.3s;
-    }
-
-    .example-item:hover {
-        background: #eef2f6;
-    }
+    /* 分析卡片区域 */
 
     /* 表格区域 */
     .kwic-table-card {
@@ -717,6 +723,10 @@
     .syntax-card {
         height: 100%;
     }
+    .syntax-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
 
     .syntax-header {
         width: 100%;
@@ -730,83 +740,83 @@
         align-items: center;
         gap: 12px;
     }
+    /* 句法分析卡片样式 */
 
-    .pattern-title {
-        font-weight: 500;
-        color: #303133;
+    /* 词义分析 */
+    .meaning-contain {
+        height: 300px;
     }
-
-    .example-list {
-        padding: 8px 0;
-    }
-
-    .example-card {
+    .meaning-item {
         padding: 12px 16px;
-        margin: 8px 0;
-        background: #f8f9fa;
-        border-radius: 8px;
-        transition: all 0.3s;
+        border-bottom: 1px solid #ebeef5;
     }
 
-    .example-card:hover {
-        background: #eef2f6;
-        transform: translateX(4px);
+    .meaning-item:hover,
+    .syntax-item:hover {
+        background: #f5f7fa;
     }
 
-    .example-text {
-        color: #606266;
+    .meaning-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .meaning-definition {
         font-size: 14px;
+        color: #303133;
+        font-weight: 500;
     }
 
-    :deep(.el-collapse-item__header) {
-        font-size: 15px;
-        padding: 12px 16px;
-        background: #fafbfc;
-        border-radius: 6px;
+    .pattern-structure {
+        font-size: 14px;
+        color: #303133;
+        font-weight: 500;
     }
 
-    :deep(.el-collapse-item__content) {
-        padding: 16px;
+    :deep(.el-progress-bar__outer) {
+        border-radius: 4px;
+        background: #ebeef5;
     }
 
-    :deep(.el-collapse-item__wrap) {
-        background: transparent;
+    :deep(.el-progress-bar__inner) {
+        border-radius: 4px;
+        transition: width 0.6s ease;
     }
+    /* 词义分析 */
 
     /* 词汇用法总结卡片样式 */
     .vocab-usage-card {
         height: 100%;
     }
-
-    .vocab-usage-table {
-        margin-top: 12px;
+    .vocab-usage-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
-    :deep(.el-table) {
-        --el-table-header-bg-color: #f5f7fa;
-        --el-table-border-color: #ebeef5;
-        border-radius: 8px;
-        overflow: hidden;
-        font-size: 13px; /* 设置整体字体大小 */
-    }
-
-    :deep(.el-table th) {
+    :deep(.vocab-usage-table th) {
         background: var(--el-table-header-bg-color);
         color: #303133;
         font-weight: 600;
         padding: 8px 0; /* 减小内边距 */
-        font-size: 13px; /* 设置表头字体大小 */
+        font-size: 13px;
     }
 
-    :deep(.el-table td) {
+    :deep(.vocab-usage-table td) {
         padding: 8px; /* 减小内边距 */
         color: #606266;
         font-size: 12px; /* 设置单元格字体大小 */
         line-height: 1.4; /* 调整行高 */
     }
-
-    :deep(.el-table--small) {
-        font-size: 12px;
+    .fullScreenTable th {
+        color: #606266;
+        font-size: 30px; /* 设置单元格字体大小 */
+        line-height: 2; /* 调整行高 */
+    }
+    .fullScreenTable {
+        font-size: 15px; /* 设置单元格字体大小 */
     }
 
     .card-header-actions {
@@ -835,5 +845,52 @@
 
     :deep(.el-table) {
         flex: 1;
+    }
+    /* 词汇用法总结卡片样式 */
+
+    /* 句法分析列表样式 */
+    .syntax-list {
+        height: 300px;
+    }
+
+    .syntax-item {
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        transition: all 0.3s;
+    }
+
+    .syntax-item:hover {
+        background: #eef2f6;
+        transform: translateX(4px);
+    }
+
+    .pattern-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pattern-structure {
+        font-size: 14px;
+        color: #303133;
+    }
+    /* 句法分析列表样式 */
+
+    .card-empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+        padding: 20px;
+    }
+
+    .el-skeleton {
+        padding: 16px;
+    }
+
+    :deep(.el-skeleton__item) {
+        margin-bottom: 12px;
     }
 </style>
