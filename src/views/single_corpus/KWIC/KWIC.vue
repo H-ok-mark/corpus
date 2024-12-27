@@ -39,9 +39,14 @@
             structure: 'get + 形容词',
         },
     ]);
-
     // KWIC数据
-    const kwicData = ref([]);
+    const kwicData = ref([
+        {
+            word: searchWord.value,
+            leftCount: '5',
+            rightCount: '5',
+        },
+    ]);
     const currentPage = ref(1);
     const pageSize = ref(10);
     const total = ref(100);
@@ -50,15 +55,23 @@
     const tableData = [
         {
             file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
+            context: 'The chair of the meeting decided to postpone the vote.',
+            leftContext: 'The',
+            node: 'chair',
+            rightContext: 'of the meeting decided to postpone the vote.',
         },
         {
             file: 'hello',
             context: 'The chair of the meeting decided to postpone the vote.',
             leftContext: 'The',
-            keyword: 'chair',
+            node: 'chair',
+            rightContext: 'of the meeting decided to postpone the vote.',
+        },
+        {
+            file: 'hello',
+            context: 'The chair of the meeting decided to postpone the vote.',
+            leftContext: 'The',
+            node: 'chair',
             rightContext: 'of the meeting decided to postpone the vote.',
         },
     ];
@@ -419,7 +432,7 @@
                     margin-left="200px"
                 >
                     <el-table-column prop="file" label="File" :width="100" />
-                    <el-table-column prop="left" label="Left Context">
+                    <el-table-column prop="leftContext" label="Left Context">
                         <!-- 自定义表头内容 -->
                         <template #header>
                             <div
@@ -486,7 +499,7 @@
                         <!-- 自定义表头内容 -->
                     </el-table-column>
 
-                    <el-table-column prop="right" label="Right Context">
+                    <el-table-column prop="rightContext" label="Right Context">
                         <!-- 自定义表头内容 -->
                         <template #header>
                             <div
