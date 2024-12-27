@@ -89,22 +89,34 @@
         // TODO: 获取对应页的数据
     };
     // 筛选框的复选内容数组
-    const Filters = [
-        { text: 'L1', value: 'L1' },
-        { text: 'L2', value: 'L2' },
-        { text: 'L3', value: 'L3' },
-        { text: 'L4', value: 'L4' },
-        { text: 'L5', value: 'L5' },
-        { text: 'L6', value: 'L6' },
-        { text: 'L7', value: 'L7' },
-        { text: 'L8', value: 'L8' },
-        { text: 'L9', value: 'L9' },
-        { text: 'L10', value: 'L10' },
+    const leftFilters = [
+        { text: 'L1', value: '1' },
+        { text: 'L2', value: '2' },
+        { text: 'L3', value: '3' },
+        { text: 'L4', value: '4' },
+        { text: 'L5', value: '5' },
+        { text: 'L6', value: '6' },
+        { text: 'L7', value: '7' },
+        { text: 'L8', value: '8' },
+        { text: 'L9', value: '9' },
+        { text: 'L10', value: '0' },
+    ];
+    const rightFilters = [
+        { text: 'R1', value: '1' },
+        { text: 'R2', value: '2' },
+        { text: 'R3', value: '3' },
+        { text: 'R4', value: '4' },
+        { text: 'R5', value: '5' },
+        { text: 'R6', value: '6' },
+        { text: 'R7', value: '7' },
+        { text: 'R8', value: '8' },
+        { text: 'R9', value: '9' },
+        { text: 'R10', value: '0' },
     ];
 
     // 存储选中的复选框内容
-    const selectedLeftFilters = ref(['L1', 'L2', 'L3', 'L4', 'L5']);
-    const selectedRightFilters = ref(['L1', 'L2', 'L3', 'L4', 'L5']);
+    const selectedLeftFilters = ref(['1', '2', '3', '4', '5']);
+    const selectedRightFilters = ref(['1', '2', '3', '4', '5']);
 
     // 控制 Popover 显示状态
     const isLeftPopoverVisible = ref(false);
@@ -465,7 +477,7 @@
                                         v-model="selectedLeftFilters"
                                     >
                                         <el-checkbox
-                                            v-for="item in Filters"
+                                            v-for="item in leftFilters"
                                             :key="item.value"
                                             :label="item.value"
                                         >
@@ -534,7 +546,7 @@
                                         v-model="selectedRightFilters"
                                     >
                                         <el-checkbox
-                                            v-for="item in Filters"
+                                            v-for="item in rightFilters"
                                             :key="item.value"
                                             :label="item.value"
                                         >
