@@ -1,4 +1,4 @@
-import request from "@/api/request.js"
+import request from "@/utils/request.js"
 
 export const userRegisterService = (registerData) => {
     //借助UrlSearchParams

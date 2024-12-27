@@ -56,51 +56,10 @@
         },
         {
             file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
-        },
-        {
-            file: 'hello',
-            left: '1',
-            node: '10',
-            right: '10',
+            context: 'The chair of the meeting decided to postpone the vote.',
+            leftContext: 'The',
+            keyword: 'chair',
+            rightContext: 'of the meeting decided to postpone the vote.',
         },
     ];
 

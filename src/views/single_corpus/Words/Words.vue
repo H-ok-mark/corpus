@@ -10,53 +10,74 @@
     };
     // 表格数据
     //修改表格排序
-    const tableData = [
+    const tableData = ref([
         {
             word: 'hello',
             frequency: '1',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '2',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '3',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '4',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '5',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '6',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '7',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '8',
             range: '10',
+            query_count: '5',
         },
         {
             word: 'hello',
             frequency: '9',
             range: '10',
+            query_count: '5',
         },
-    ];
+    ]);
+    import { wordsListService, wordsSearchService } from '@/api/words.js';
+    //全部词频显示函数
+    const wordsList = async () => {
+        let result = await wordsListService();
+        tableData.value = result.data;
+    };
+    //调用全部词频显示函数
+    wordsList();
+    const wordsSearch = async () => {
+        let result = await wordsSearchService(words.value);
+        tableData.value = result.data;
+    };
     //分页条数据模型
     const pageNum = ref(1); //当前页
     const total = ref(20); //总条数
@@ -111,7 +132,7 @@
                     :width="250"
                     sortable
                 />
-                <el-table-column prop="range" label="Range%" />
+                <el-table-column prop="range" label="Range" />
             </el-table>
         </div>
         <!-- 分页条 -->

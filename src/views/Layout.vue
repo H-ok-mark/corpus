@@ -17,12 +17,12 @@
     } from '@element-plus/icons-vue';
     import avatar from '@/assets/default.png';
     import { useRouter } from 'vue-router';
+    // import { useTokenStore } from '@/stores/token';
     const router = useRouter();
-
     const handleCommand = command => {
         if (command === 'logout') {
             // TODO: 清除登录状态
-            localStorage.removeItem('token');
+            useTokenStore.removeToken();
             router.push('/login');
         }
         if (command === 'user-corpus') {

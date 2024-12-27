@@ -6,21 +6,32 @@
     const searchQuery = ref('');
 
     // 模拟的语料库数据
-    const corpusList = ref([
+    const corpusListData = ref([
         {
+            id: 1,
             name: '英语新闻语料库',
             description: '包含近5年的英语新闻文章，涵盖政治、经济、科技等领域',
+            size: '10MB',
         },
         {
+            id: 2,
             name: '学术论文语料库',
             description: '收录各领域英语学术论文摘要，适合学术写作研究',
+            size: '15MB',
         },
         {
+            id: 3,
             name: '文学作品语料库',
             description: '经典英语文学作品集合，包括小说、诗歌等体裁',
+            size: '20MB',
         },
     ]);
 
+    import { corpusListService } from '@/api/corpusList.js';
+    const corpusList = async () => {
+        let result = await corpusListService();
+        corpusListData.value = result.data;
+    };
     // 搜索方法
     const handleSearch = () => {
         console.log('搜索关键词:', searchQuery.value);
@@ -53,14 +64,23 @@
         <!-- 语料库列表 -->
         <div class="corpus-list">
             <el-card
-                v-for="corpus in corpusList"
+                v-for="corpus in corpusListData"
                 :key="corpus.name"
                 class="corpus-item"
                 shadow="hover"
             >
                 <div class="corpus-content">
                     <div class="corpus-info">
-                        <h2 class="corpus-title">{{ corpus.name }}</h2>
+                        <h2 class="corpus-title">
+                            {{ corpus.name }}
+                            <el-tag
+                                class="corpus-tag"
+                                type="info"
+                                size="small"
+                                >{{ corpus.size }}</el-tag
+                            >
+                        </h2>
+
                         <p class="corpus-description">
                             {{ corpus.description }}
                         </p>
@@ -129,6 +149,9 @@
         margin: 0 0 8px 0;
         font-size: 20px;
         color: #303133;
+    }
+    .corpus-tag {
+        margin-left: 30px;
     }
 
     .corpus-description {

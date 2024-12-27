@@ -42,20 +42,17 @@
     };
     //登录跳转
     const login = () => {
+        // ElMessage.success(result.data.msg ? result.data.message : '登陆成功');
         router.push('/login/layout');
     };
 
     //注册
+    // 调用接口
     import { userRegisterService } from '@/api/user.js';
+    import { ElMessage } from 'element-plus';
     const register = async () => {
         let result = await userRegisterService(registerData.value);
-        if (result.code === 0) {
-            console.log(result);
-            alert(result.message ? result.message : '注册成功');
-        } else {
-            console.log(result);
-            alert('注册失败');
-        }
+        ElMessage.success(result.data.msg ? result.data.message : '注册成功');
     };
 </script>
 
