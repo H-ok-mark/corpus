@@ -114,6 +114,13 @@
         { text: 'R10', value: '0' },
     ];
 
+    // const kwicSearch = ref([
+    //     {
+
+    //         selectedLeftFilters: "['1', '2', '3', '4', '5']",
+    //         selectedRightFilters: "['1', '2', '3', '4', '5']",
+    //     },
+    // ]);
     // 存储选中的复选框内容
     const selectedLeftFilters = ref(['1', '2', '3', '4', '5']);
     const selectedRightFilters = ref(['1', '2', '3', '4', '5']);
@@ -132,8 +139,6 @@
 
     // 应用筛选：关闭 Popover 并打印选中的值
     const applyFilter = () => {
-        console.log('选中的筛选条件:', selectedLeftFilters.value);
-        console.log('选中的筛选条件:', selectedRightFilters.value);
         isLeftPopoverVisible.value = false;
         isRightPopoverVisible.value = false; // 关闭弹出框
     };

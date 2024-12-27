@@ -22,7 +22,7 @@
     const handleCommand = command => {
         if (command === 'logout') {
             // TODO: 清除登录状态
-            useTokenStore.removeToken();
+            // useTokenStore.removeToken();
             router.push('/login');
         }
         if (command === 'user-corpus') {
