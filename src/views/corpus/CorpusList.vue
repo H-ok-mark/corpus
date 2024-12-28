@@ -3,7 +3,7 @@
     import { Search } from '@element-plus/icons-vue';
 
     // 搜索关键词
-    const searchQuery = ref('');
+    const searchCorpus = ref(null);
 
     // 模拟的语料库数据
     const corpusListData = ref([
@@ -27,14 +27,31 @@
         },
     ]);
 
-    import { corpusListService } from '@/api/corpusList.js';
+    import { corpusListService, corpusDownloadService } from '@/api/corpusList.js';
+    import { ElMessage } from 'element-plus';
     const corpusList = async () => {
-        let result = await corpusListService();
+        let result = await corpusListService({
+            params: {
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                searchCorpus: searchCorpus.value,
+            },
+        });
         corpusListData.value = result.data;
+        total.value = result.data.total;
     };
-    // 搜索方法
-    const handleSearch = () => {
-        console.log('搜索关键词:', searchQuery.value);
+    corpusList();
+    const handleDownload = async id => {
+        await corpusDownloadService(id);
+        ElMessage.success('下载成功');
+    };
+    const pageNum = ref(1);
+    const total = ref(20);
+    const pageSize = ref(4); // 每页显示的数据条数
+    // 处理分页变化
+    const handlePageChange = newPage => {
+        pageNum.value = newPage;
+        corpusList(); // 当前页码变化时重新发起查询
     };
 </script>
 
@@ -48,13 +65,13 @@
         <!-- 搜索框 -->
         <div class="search-box">
             <el-input
-                v-model="searchQuery"
+                v-model="searchCorpus"
                 placeholder="请输入语料库名称"
                 class="search-input"
                 size="large"
             >
                 <template #append>
-                    <el-button :icon="Search" @click="handleSearch">
+                    <el-button :icon="Search" @click="corpusList">
                         搜索
                     </el-button>
                 </template>
@@ -87,13 +104,27 @@
                     </div>
                     <div class="corpus-actions">
                         <el-button-group>
-                            <el-button type="primary" size="large">
+                            <el-button
+                                type="primary"
+                                size="large"
+                                @click="handleDownload(corpus.id)"
+                            >
                                 下载
                             </el-button>
                         </el-button-group>
                     </div>
                 </div>
             </el-card>
+        </div>
+        <!-- 分页查询 -->
+        <div class="pagination">
+            <el-pagination
+                v-model:current-page="pageNum"
+                v-model:page-size="pageSize"
+                :total="total"
+                layout="jumper,total, prev, pager, next "
+                @current-change="handlePageChange"
+            />
         </div>
     </el-card>
 </template>
@@ -166,5 +197,10 @@
 
     :deep(.el-button-group .el-button) {
         margin-right: -1px;
+    }
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
     }
 </style>

@@ -15,7 +15,43 @@
             createTime: '2024-03-20 10:00:00',
         },
     ]);
-
+    import {
+        userCorpusSearchService,
+        userCorpusService,
+        userCorpusImportService,
+    } from '@/api/userCorpus';
+    //----未实现
+    const userCorpusList = async () => {
+        let result = await userCorpusService({
+            params: {
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+            },
+        });
+        corpusList.value = result.data;
+        total.value = result.data.total;
+    };
+    userCorpusList();
+    //搜索语料库
+    const handleSearch = async () => {
+        let result = await userCorpusSearchService({
+            params: {
+                searchQuery: searchQuery.value,
+            },
+        });
+        //？？返回太多东西了
+        corpusList.value = result.data;
+        total.value = result.data.total;
+    };
+    //分页查询
+    const pageNum = ref(1);
+    const total = ref(20);
+    const pageSize = ref(4); // 每页显示的数据条数
+    // 处理分页变化
+    const handlePageChange = newPage => {
+        pageNum.value = newPage;
+        userCorpusList(); // 当前页码变化时重新发起查询
+    };
     // 计算属性：过滤后的语料库列表
     const filteredCorpusList = computed(() => {
         return corpusList.value.filter(
@@ -32,10 +68,6 @@
     // 方法定义
     const showImportDialog = () => {
         importDialogVisible.value = true;
-    };
-
-    const handleSearch = () => {
-        // 实现搜索逻辑
     };
 
     const handleEdit = (row: any) => {
@@ -101,6 +133,19 @@
         description: '',
         files: [],
     });
+    // 上传语料库的函数
+    const uploadCorpus = async () => {
+        const formData = new FormData();
+
+        // 将 form 数据添加到 FormData 对象中
+        formData.append('name', corpusForm.value.name);
+        formData.append('description', corpusForm.value.description);
+
+        // 添加文件数据（假设 files 是一个文件数组）
+        corpusForm.value.files.forEach(file => {
+            formData.append('file', file);
+        });
+    };
 
     // 表单验证规则
     const rules = {
@@ -209,6 +254,16 @@
                     </el-table-column>
                 </el-table>
             </div>
+            <!-- 分页查询 -->
+            <div class="pagination">
+                <el-pagination
+                    v-model:current-page="pageNum"
+                    v-model:page-size="pageSize"
+                    :total="total"
+                    layout="jumper,total, prev, pager, next "
+                    @current-change="handlePageChange"
+                />
+            </div>
         </el-card>
 
         <!-- 导入语料库对话框 -->
@@ -244,14 +299,13 @@
                     <el-upload
                         class="upload-demo"
                         drag
-                        action="/api/corpus/import"
-                        multiple
+                        action="/corpus/import"
                         :on-success="handleUploadSuccess"
                         :on-error="handleUploadError"
                     >
-                        <el-icon class="el-icon--upload"
-                            ><upload-filled
-                        /></el-icon>
+                        <el-icon class="el-icon--upload">
+                            <upload-filled />
+                        </el-icon>
                         <div class="el-upload__text">
                             将文件拖到此处，或<em>点击上传</em>
                         </div>
@@ -418,5 +472,10 @@
 
     :deep(.el-button--primary) {
         font-weight: 500;
+    }
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
     }
 </style>

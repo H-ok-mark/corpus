@@ -12,6 +12,7 @@
         DataLine,
         Operation,
     } from '@element-plus/icons-vue';
+    import { ElMessage } from 'element-plus';
 
     // 搜索词
     const searchWord = ref('');
@@ -78,20 +79,10 @@
             none: '',
         },
     ]);
-    // KWIC数据
-    const kwicData = ref([
-        {
-            word: searchWord.value,
-            leftCount: '5',
-            rightCount: '5',
-        },
-    ]);
-    const currentPage = ref(1);
-    const pageSize = ref(10);
-    const total = ref(100);
+
     // 表格数据
     //修改表格排序
-    const tableData = [
+    const tableData = ref([
         {
             file: 'hello',
             context: 'The chair of the meeting decided to postpone the vote.',
@@ -113,7 +104,21 @@
             node: 'chair',
             rightContext: 'of the meeting decided to postpone the vote.',
         },
-    ];
+    ]);
+    // KWIC数据
+    const kwicData = ref({
+        file: '',
+        word: '',
+        leftCount: '5',
+        rightCount: '5',
+    });
+    import { kwicService } from '@/api/KWIC';
+    const kwicSearch = async () => {
+        let result = await kwicService(kwicData.value);
+        tableData.value = result.data;
+        total.value = result.data.total;
+    };
+    kwicSearch();
 
     // 处理搜索
     const handleSearch = () => {
@@ -122,11 +127,6 @@
         // TODO: 调用API获取分析结果
     };
 
-    // 处理分页
-    const handlePageChange = (page: number) => {
-        currentPage.value = page;
-        // TODO: 获取对应页的数据
-    };
     // 筛选框的复选内容数组
     const leftFilters = [
         { text: 'L1', value: '1' },
@@ -154,19 +154,29 @@
     ];
 
     // 存储选中的复选框内容
-    const selectedLeftFilters = ref(['1', '2', '3', '4', '5']);
-    const selectedRightFilters = ref(['1', '2', '3', '4', '5']);
+    //----选择第几个词
+    // const selectedLeftFilters = ref(['1', '2', '3', '4', '5']);
+    // const selectedRightFilters = ref(['1', '2', '3', '4', '5']);
+    const selectedLeftFilters = ref(5);
+    const selectedRightFilters = ref(5);
 
     // 控制 Popover 显示状态
     const isLeftPopoverVisible = ref(false);
     const isRightPopoverVisible = ref(false);
 
     // 清空筛选
+    //----选择第几个词
+    // const clearLeftFilter = () => {
+    //     selectedLeftFilters.value = [];
+    // };
+    // const clearRightFilter = () => {
+    //     selectedRightFilters.value = [];
+    // };
     const clearLeftFilter = () => {
-        selectedLeftFilters.value = [];
+        kwicData.value.leftCount = null;
     };
     const clearRightFilter = () => {
-        selectedRightFilters.value = [];
+        kwicData.value.rightCount = null;
     };
 
     // 应用筛选：关闭 Popover 并打印选中的值
@@ -179,21 +189,6 @@
 
     // 控制弹窗显示
     const dialogVisible = ref(false);
-    // 分页参数
-    const dialogCurrentPage = ref(1);
-    const dialogPageSize = ref(10);
-
-    // 计算分页后的数据
-    const paginatedData = computed(() => {
-        const start = (dialogCurrentPage.value - 1) * dialogPageSize.value;
-        const end = start + dialogPageSize.value;
-        return vocabUsageData.value.slice(start, end);
-    });
-
-    // 处理分页变化
-    const handleDialogPageChange = (val: number) => {
-        dialogCurrentPage.value = val;
-    };
 
     // 加载状态控制
     const semanticLoading = ref(false);
@@ -227,6 +222,38 @@
                 syntaxLoading.value = false;
                 break;
         }
+    };
+
+    // 词汇用法总结全屏分页参数
+    const dialogCurrentPage = ref(1);
+    const dialogPageSize = ref(10);
+    // 词汇用法总结计算分页后的数据
+    const paginatedData = computed(() => {
+        const start = (dialogCurrentPage.value - 1) * dialogPageSize.value;
+        const end = start + dialogPageSize.value;
+        return vocabUsageData.value.slice(start, end);
+    });
+
+    // 处理分页变化
+    const handleDialogPageChange = (val: number) => {
+        dialogCurrentPage.value = val;
+    };
+
+    //KWIC分页
+    const pageNum = ref(1);
+    const total = ref(50);
+    const pageSize = ref(10); // 每页显示的数据条数
+    // // 处理分页
+    // const handlePageChange = (page: number) => {
+    //     pageNum.value = page;
+    //     // TODO: 获取对应页的数据
+    // };
+
+    //函数调用
+    // 处理分页变化
+    const handlePageChange = newPage => {
+        pageNum.value = newPage;
+        kwicSearch(); // 当前页码变化时重新发起查询
     };
 </script>
 
@@ -488,7 +515,7 @@
                                     </template>
 
                                     <!-- 筛选内容：复选框组 -->
-                                    <el-checkbox-group
+                                    <!-- <el-checkbox-group
                                         v-model="selectedLeftFilters"
                                     >
                                         <el-checkbox
@@ -498,7 +525,20 @@
                                         >
                                             {{ item.text }}
                                         </el-checkbox>
-                                    </el-checkbox-group>
+                                    </el-checkbox-group> -->
+                                    <!-- 筛选内容：单选组 -->
+                                    <el-radio-group
+                                        v-model="kwicData.leftCount"
+                                    >
+                                        <el-radio
+                                            v-for="item in leftFilters"
+                                            :key="item.value"
+                                            :label="item.value"
+                                        >
+                                            {{ item.text }}
+                                        </el-radio>
+                                    </el-radio-group>
+                                    <!-- 筛选内容：单选组 -->
 
                                     <!-- 筛选操作按钮：两端分布 -->
                                     <div
@@ -557,7 +597,7 @@
                                     </template>
 
                                     <!-- 筛选内容：复选框组 -->
-                                    <el-checkbox-group
+                                    <!-- <el-checkbox-group
                                         v-model="selectedRightFilters"
                                     >
                                         <el-checkbox
@@ -567,7 +607,21 @@
                                         >
                                             {{ item.text }}
                                         </el-checkbox>
-                                    </el-checkbox-group>
+                                    </el-checkbox-group> -->
+
+                                    <!-- 筛选内容：单选组 -->
+                                    <el-radio-group
+                                        v-model="kwicData.rightCount"
+                                    >
+                                        <el-radio
+                                            v-for="item in rightFilters"
+                                            :key="item.value"
+                                            :label="item.value"
+                                        >
+                                            {{ item.text }}
+                                        </el-radio>
+                                    </el-radio-group>
+                                    <!-- 筛选内容：单选组 -->
 
                                     <!-- 筛选操作按钮：两端分布 -->
                                     <div
@@ -592,7 +646,7 @@
                 </el-table>
                 <div class="pagination">
                     <el-pagination
-                        v-model:current-page="currentPage"
+                        v-model:current-page="pageNum"
                         :page-size="pageSize"
                         :total="total"
                         @current-change="handlePageChange"

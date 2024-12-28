@@ -66,7 +66,7 @@
     const tableData = ref([]);
     const pageNum = ref(1);
     const total = ref(0);
-    const size = ref(10); // 每页显示的数据条数
+    const pageSize = ref(10); // 每页显示的数据条数
 
     // 搜索词查询方法
     const searchWords = async () => {
@@ -75,7 +75,7 @@
                 params: {
                     word: word.value,
                     page: pageNum.value,
-                    size: size.value,
+                    size: pageSize.value,
                 },
             });
             // 更新表格数据

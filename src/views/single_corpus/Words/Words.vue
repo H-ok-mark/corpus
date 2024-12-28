@@ -71,7 +71,7 @@
     //分页条数据模型
     const pageNum = ref(1); //当前页
     const total = ref(100); //总条数
-    const size = ref(10); // 每页显示的数据条数
+    const pageSize = ref(10); // 每页显示的数据条数
 
     //调用搜索词频显示函数
     const searchWords = async () => {
@@ -79,7 +79,7 @@
             params: {
                 word: word.value,
                 page: pageNum.value,
-                size: size.value,
+                size: pageSize.value,
             },
         });
         tableData.value = result.data;
