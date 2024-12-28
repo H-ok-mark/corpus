@@ -39,6 +39,45 @@
             structure: 'get + 形容词',
         },
     ]);
+    // 添加词汇用法数据
+    const vocabUsageData = ref([
+        {
+            subject: 'The chair',
+            adverbOrModal: 'usually',
+            adjective: 'comfortable',
+            none: '',
+        },
+        {
+            subject: 'He',
+            adverbOrModal: 'will',
+            adjective: '',
+            none: 'chairs',
+        },
+        {
+            subject: 'They',
+            adverbOrModal: 'might',
+            adjective: 'wooden',
+            none: '',
+        },
+        {
+            subject: 'They',
+            adverbOrModal: 'might',
+            adjective: 'wooden',
+            none: '',
+        },
+        {
+            subject: 'They',
+            adverbOrModal: 'might',
+            adjective: 'wooden',
+            none: '',
+        },
+        {
+            subject: 'They',
+            adverbOrModal: 'might',
+            adjective: 'wooden',
+            none: '',
+        },
+    ]);
     // KWIC数据
     const kwicData = ref([
         {
@@ -114,13 +153,6 @@
         { text: 'R10', value: '0' },
     ];
 
-    // const kwicSearch = ref([
-    //     {
-
-    //         selectedLeftFilters: "['1', '2', '3', '4', '5']",
-    //         selectedRightFilters: "['1', '2', '3', '4', '5']",
-    //     },
-    // ]);
     // 存储选中的复选框内容
     const selectedLeftFilters = ref(['1', '2', '3', '4', '5']);
     const selectedRightFilters = ref(['1', '2', '3', '4', '5']);
@@ -144,28 +176,6 @@
     };
     // 控制 Popover 显示状态
     const isNodePopoverVisible = ref(false);
-
-    // 添加词汇用法数据
-    const vocabUsageData = ref([
-        {
-            subject: 'The chair',
-            adverbOrModal: 'usually',
-            adjective: 'comfortable',
-            none: '',
-        },
-        {
-            subject: 'He',
-            adverbOrModal: 'will',
-            adjective: '',
-            none: 'chairs',
-        },
-        {
-            subject: 'They',
-            adverbOrModal: 'might',
-            adjective: 'wooden',
-            none: '',
-        },
-    ]);
 
     // 控制弹窗显示
     const dialogVisible = ref(false);

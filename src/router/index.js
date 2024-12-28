@@ -2,20 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 import LoginVue from '@/views/Login.vue';
 import LayoutVue from '@/views/Layout.vue';
-// import ArticleCategoryVue from '@/views/article/ArticleCategory.vue';
-// import ArticleManageVue from '@/views/article/ArticleManage.vue';
-// import ArticleTestVue from '@/views/article/ArticleTest.vue';
-// import UserAvatarVue from '@/views/user/UserAvatar.vue';
-// import UserInfoVue from '@/views/user/UserInfo.vue';
-// import UserResetPasswordVue from '@/views/user/UserResetPassword.vue';
-
 import UserCorpusVue from "@/views/corpus/UserCorpus.vue";
 import CorpusListVue from "@/views/corpus/CorpusList.vue";
 import TranslationVue from "@/views/double_corpus/Translation.vue";
 import KwicVue from "@/views/single_corpus/KWIC/KWIC.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
 import Welcomevue from "@/views/Welcome.vue"
-
+//测试界面
+import elPagination from '@/views/test_demo/el-pagination.vue';
+import searchPag from '@/views/test_demo/search-pag.vue';
 
 
 
@@ -37,6 +32,11 @@ const routes = [
             { path: "/double-corpus/translation", component: TranslationVue },
             { path: "/corpus/list", component: CorpusListVue },
             { path: "/corpus/users", component: UserCorpusVue },
+            //测试界面
+            { path: "/el-pagination", component: elPagination },
+            { path: "/search-page", component: searchPag },
+
+
 
         ]
 

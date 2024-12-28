@@ -2,11 +2,11 @@
 <script setup lang="ts">
     import { ref } from 'vue';
     import { Search } from '@element-plus/icons-vue';
-    const words = ref('');
+    const word = ref('');
 
     // 点击搜索按钮触发的方法
     const onSearch = () => {
-        console.log('搜索内容:', words.value);
+        console.log('搜索内容:', word.value);
     };
     // 表格数据
     //修改表格排序
@@ -66,25 +66,31 @@
             query_count: '5',
         },
     ]);
-    import { wordsListService, wordsSearchService } from '@/api/words.js';
-    //全部词频显示函数
-    const wordsList = async () => {
-        let result = await wordsListService();
-        tableData.value = result.data;
-    };
-    //调用全部词频显示函数
-    wordsList();
-    const wordsSearch = async () => {
-        let result = await wordsSearchService(words.value);
-        tableData.value = result.data;
-    };
+    import { wordsSearchService } from '@/api/words.js';
+
     //分页条数据模型
     const pageNum = ref(1); //当前页
-    const total = ref(20); //总条数
+    const total = ref(100); //总条数
+    const size = ref(10); // 每页显示的数据条数
 
-    //当前页码发生变化，调用此函数
-    const onCurrentChange = num => {
-        pageNum.value = num;
+    //调用搜索词频显示函数
+    const searchWords = async () => {
+        let result = await wordsSearchService({
+            params: {
+                word: word.value,
+                page: pageNum.value,
+                size: size.value,
+            },
+        });
+        tableData.value = result.data;
+        total.value = result.data.total;
+    };
+    //调用全部词频显示函数
+    searchWords();
+    // 处理分页变化
+    const handlePageChange = newPage => {
+        pageNum.value = newPage;
+        searchWords(); // 当前页码变化时重新发起查询
     };
 </script>
 
@@ -99,7 +105,7 @@
         <!-- 词频搜索框 -->
         <div class="words-search">
             <el-input
-                v-model="words"
+                v-model="word"
                 style="max-width: 600px"
                 placeholder="Please input"
                 size="large"
@@ -141,7 +147,7 @@
             layout="jumper, total, prev, pager, next"
             background
             :total="total"
-            @current-change="onCurrentChange"
+            @current-change="handlePageChange"
             style="margin-top: 20px; justify-content: flex-end"
         />
     </el-card>
