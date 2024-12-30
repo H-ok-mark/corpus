@@ -1,9 +1,21 @@
 import request from "@/utils/request.js"
 
 export const kwicService = (kwicData) => {
-    return request.post('/corpus/kwic', {
+    console.log({
+        file: kwicData.file,
         word: kwicData.word,
-        leftCount: kwicData.leftCount || 5,
-        rightCount: kwicData.rightCount || 5
+        leftpart: kwicData.leftpart,
+        rightpart: kwicData.rightpart,
+        pageNum: kwicData.pageNum,
+        pageSize: kwicData.pageSize
+    });
+
+    return request.post('/corpus/mono/kwic', {
+        file: kwicData.file,
+        word: kwicData.word,
+        leftpart: kwicData.leftpart,
+        rightpart: kwicData.rightpart,
+        pageNum: kwicData.pageNum,
+        pageSize: kwicData.pageSize
     })
 }

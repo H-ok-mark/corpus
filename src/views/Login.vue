@@ -6,15 +6,21 @@
     //控制注册与登录表单的显示， 默认显示注册
     const isRegister = ref(false);
     //注册表单数据
-    const registerData = ref({
+    const loginData = ref({
         username: '',
         password: '',
         rePassword: '',
     });
+    //清空表单信息函数
+    const clearloginData = () => {
+        loginData.value.username = '';
+        loginData.value.password = '';
+        loginData.value.rePassword = '';
+    };
     const checkRePassword = (rule, value, callback) => {
         if (value === '') {
             callback(new Error('请再次输入密码'));
-        } else if (value !== registerData.value.password) {
+        } else if (value !== loginData.value.password) {
             callback(new Error('两次输入的密码不一致'));
         } else {
             callback();
@@ -40,19 +46,47 @@
         ],
         rePassword: [{ validator: checkRePassword, trigger: 'blur' }],
     };
-    //登录跳转
-    const login = () => {
-        // ElMessage.success(result.data.msg ? result.data.message : '登陆成功');
-        router.push('/login/layout');
-    };
 
     //注册
     // 调用接口
-    import { userRegisterService } from '@/api/user.js';
+    import { userRegisterService, userLoginService } from '@/api/user.js';
     import { ElMessage } from 'element-plus';
+    //定义注册数据
+    const registerData = ref({
+        id: null,
+        username: null,
+        password: null,
+        role: null,
+        createdAt: null,
+        updatedAt: null,
+    });
+    //注册
     const register = async () => {
+        registerData.value.username = loginData.value.username;
+        registerData.value.password = loginData.value.password;
         let result = await userRegisterService(registerData.value);
-        ElMessage.success(result.data.msg ? result.data.message : '注册成功');
+        ElMessage.success('注册成功');
+        // ElMessage.success(result.data.message ? result.data.message : '注册成功');
+        clearloginData();
+    };
+    import { useTokenStore } from '@/stores/token.js';
+
+    const tokenStore = useTokenStore();
+    //登录
+    const login = async () => {
+        let result = await userLoginService({
+            username: loginData.value.username,
+            password: loginData.value.password,
+        });
+        ElMessage.success(result.data.message ? result.data.message : '登陆成功');
+
+        // 使用 Pinia 存储 token
+        tokenStore.setToken(result.data);
+        // // 或者保存到 LocalStorage
+        // console.log(token);
+        // localStorage.setItem('token', token);
+
+        router.push('/login/layout');
     };
 </script>
 
@@ -66,7 +100,7 @@
                 size="large"
                 autocomplete="off"
                 v-if="isRegister"
-                :model="registerData"
+                :model="loginData"
                 :rules="rules"
             >
                 <el-form-item>
@@ -76,7 +110,7 @@
                     <el-input
                         :prefix-icon="User"
                         placeholder="请输入用户名"
-                        v-model="registerData.username"
+                        v-model="loginData.username"
                     ></el-input>
                 </el-form-item>
                 <el-form-item prop="password">
@@ -84,7 +118,7 @@
                         :prefix-icon="Lock"
                         type="password"
                         placeholder="请输入密码"
-                        v-model="registerData.password"
+                        v-model="loginData.password"
                     ></el-input>
                 </el-form-item>
                 <el-form-item prop="rePassword">
@@ -92,7 +126,7 @@
                         :prefix-icon="Lock"
                         type="password"
                         placeholder="请再次输入密码"
-                        v-model="registerData.rePassword"
+                        v-model="loginData.rePassword"
                     ></el-input>
                 </el-form-item>
                 <!-- 注册按钮 -->
@@ -101,7 +135,7 @@
                         class="button"
                         type="primary"
                         auto-insert-space
-                        @click="register"
+                        @click="register()"
                     >
                         注册
                     </el-button>
@@ -110,21 +144,33 @@
                     <el-link
                         type="info"
                         :underline="false"
-                        @click="isRegister = false"
+                        @click="
+                            isRegister = false;
+                            clearloginData();
+                        "
                     >
                         ← 返回
                     </el-link>
                 </el-form-item>
             </el-form>
             <!-- 登录表单 -->
-            <el-form ref="form" size="large" autocomplete="off" v-else>
+            <el-form
+                ref="form"
+                size="large"
+                autocomplete="off"
+                :model="loginData"
+                :rules="rules"
+                v-else
+            >
                 <el-form-item>
                     <h1>登录</h1>
                 </el-form-item>
                 <el-form-item>
                     <el-input
                         :prefix-icon="User"
+                        name="username"
                         placeholder="请输入用户名"
+                        v-model="loginData.username"
                     ></el-input>
                 </el-form-item>
                 <el-form-item>
@@ -133,6 +179,8 @@
                         :prefix-icon="Lock"
                         type="password"
                         placeholder="请输入密码"
+                        v-model="loginData.password"
+                        :model="isRegister"
                     ></el-input>
                 </el-form-item>
                 <el-form-item class="flex">
@@ -149,7 +197,7 @@
                         class="button"
                         type="primary"
                         auto-insert-space
-                        @click="login"
+                        @click="login()"
                         >登录</el-button
                     >
                 </el-form-item>
@@ -157,7 +205,10 @@
                     <el-link
                         type="info"
                         :underline="false"
-                        @click="isRegister = true"
+                        @click="
+                            isRegister = true;
+                            clearloginData();
+                        "
                     >
                         注册 →
                     </el-link>

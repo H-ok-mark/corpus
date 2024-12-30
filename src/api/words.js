@@ -1,15 +1,21 @@
-import request from "@/utils/request.js"
+import request from "@/utils/request"
 
-export const wordsSearchService = (wordsSearchParams) => {
-    //若搜索词为空，则默认显示所有词
-    if (wordsSearchParams.word.value === null) {
-        return request.get("/corpus/sort")
+export const wordsListService = (wordsSearchParams) => {
+    // 若搜索词为空，则默认显示所有词
+    if (!wordsSearchParams.word) {
+        return request.get("/corpus/mono/sort", {
+            params: {
+                corpusId: 2,
+                pageSize: wordsSearchParams.pageSize,
+                pageNumber: wordsSearchParams.pageNum,
+            },
+        });
     } else {
-        return request.post('/corpus/frequency', {
-            word: wordsSearchParams.word.value,
-            page: wordsSearchParams.pageNum.value,
-            size: wordsSearchParams.size.value,
-        },)
+        return request.get('/corpus/mono/frequency', {
+            params: {
+                keyword: wordsSearchParams.word,
+                corpusId: 2,
+            },
+        });
     }
-
-}
+};

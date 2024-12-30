@@ -12,9 +12,10 @@ import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-persistedstate-plugin'
 
 const app = createApp(App);
-// const persist = createPersistedState();
-// pinia.use(persist)
-// app.use(pinia)
+const pinia = createPinia()
+const persist = createPersistedState();
+pinia.use(persist)
+app.use(pinia)
 app.use(router);
 app.use(ElementPlus, { locale })
 app.mount('#app')

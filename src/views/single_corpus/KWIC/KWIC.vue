@@ -43,146 +43,171 @@
     // 添加词汇用法数据
     const vocabUsageData = ref([
         {
-            subject: 'The chair',
-            adverbOrModal: 'usually',
-            adjective: 'comfortable',
-            none: '',
+            subject: 'Patient',
+            adverbOrModal: 'currently',
+            adjective: 'medical',
+            none: 'treatment', // 注意：这里将'treatment'放在'none'字段，因为它不是adverb、modal或adjective
         },
         {
-            subject: 'He',
-            adverbOrModal: 'will',
-            adjective: '',
-            none: 'chairs',
+            subject: 'Candidate',
+            adverbOrModal: 'must',
+            adjective: 'extensive',
+            none: 'training',
         },
         {
-            subject: 'They',
-            adverbOrModal: 'might',
-            adjective: 'wooden',
-            none: '',
+            subject: 'Individual',
+            adverbOrModal: 'often',
+            adjective: 'significant',
+            none: 'changes',
         },
         {
-            subject: 'They',
-            adverbOrModal: 'might',
-            adjective: 'wooden',
-            none: '',
+            subject: 'System',
+            adverbOrModal: 'may',
+            adjective: 'major',
+            none: 'transformation',
         },
         {
-            subject: 'They',
-            adverbOrModal: 'might',
-            adjective: 'wooden',
-            none: '',
+            subject: 'Building',
+            adverbOrModal: 'recently',
+            adjective: 'complete',
+            none: 'refurbishment', // 注意拼写，原文中是'refurbishment'，可能是'refurbishment'的误写，通常应为'refurbishment'（如果是指翻新的话，正确拼写应为'refurbishment'的变体如'refurbishing'的名词形式可能是'refurbishment'，但此处我们保持原文）
         },
         {
-            subject: 'They',
-            adverbOrModal: 'might',
-            adjective: 'wooden',
-            none: '',
+            subject: 'Organization',
+            adverbOrModal: 'sometimes',
+            adjective: 'radical',
+            none: 'restructuring',
         },
     ]);
+    const vocabUsageDescription = ref(
+        '“Undergo” 常用于描述主体（如人、组织、系统等）经历某种过程或状态的变化,通常伴随重要的或显著的转变。这些过程多为被动性质，包含医疗（如手术、治疗）、培训（如严格训练）、评估测试（如产品测试）、转型（如重大改革）、翻新（如设施改造）等场景。体现过程的规模、程度或性质。'
+    );
 
+    // 存储选中的复选框内容
+    //----选择第几个词
+    const selectedLeftFilters = ref([1, 2, 3, 4, 5]);
+    const selectedRightFilters = ref([1, 2, 3, 4, 5]);
+    //KWIC分页
+    const pageNum = ref(1);
+    const total = ref(100);
+    const pageSize = ref(10); // 每页显示的数据条数
+
+    // KWIC传输数据
+    const kwicData = ref({
+        file: 'demo2',
+        word: searchWord.value,
+        leftPart: [1, 1, 1, 1, 1],
+        rightPart: [1, 1, 1, 1, 1],
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+    });
     // 表格数据
     //修改表格排序
     const tableData = ref([
         {
-            file: 'hello',
-            context: 'The chair of the meeting decided to postpone the vote.',
-            leftContext: 'The',
-            node: 'chair',
-            rightContext: 'of the meeting decided to postpone the vote.',
-        },
-        {
-            file: 'hello',
-            context: 'The chair of the meeting decided to postpone the vote.',
-            leftContext: 'The',
-            node: 'chair',
-            rightContext: 'of the meeting decided to postpone the vote.',
-        },
-        {
-            file: 'hello',
-            context: 'The chair of the meeting decided to postpone the vote.',
+            file: kwicData.value.file,
             leftContext: 'The',
             node: 'chair',
             rightContext: 'of the meeting decided to postpone the vote.',
         },
     ]);
-    // KWIC数据
-    const kwicData = ref({
-        file: '',
-        word: '',
-        leftCount: '5',
-        rightCount: '5',
-    });
     import { kwicService } from '@/api/KWIC';
+    // 初始化长度为 10 的数组，默认全为 0
+    let leftPart = new Array(10).fill(0);
+    let rightPart = new Array(10).fill(0);
     const kwicSearch = async () => {
-        let result = await kwicService(kwicData.value);
-        tableData.value = result.data;
-        total.value = result.data.total;
+        // 遍历用户选择的左边数组，将对应索引设置为 1
+        selectedLeftFilters.value.forEach(item => {
+            const index = parseInt(item.toString()) - 1; // 转为数字并计算索引
+            if (index >= 0 && index < 10) {
+                leftPart[index] = 1; // 标记为选中
+            }
+        });
+
+        // 遍历用户选择的右边数组，将对应索引设置为 1
+        selectedRightFilters.value.forEach(item => {
+            let index = parseInt(item.toString()) - 1; // 转为数字并计算索引
+            if (index >= 0 && index < 10) {
+                rightPart[index] = 1; // 标记为选中
+            }
+        });
+        const result = await kwicService({
+            file: 'demo2',
+            word: searchWord.value,
+            leftpart: leftPart,
+            rightpart: rightPart,
+            pageNum: pageNum.value,
+            pageSize: pageSize.value,
+        });
+        tableData.value = result.data.map(item => {
+            return {
+                file: 'demo2',
+                leftContext: item.leftContext,
+                node: item.keyword,
+                rightContext: item.rightContext,
+            };
+        });
+        console.log(kwicData.value);
+        // total.value = result.data.total;
     };
-    kwicSearch();
 
     // 处理搜索
     const handleSearch = () => {
-        if (!searchWord.value) return;
+        if (!searchWord.value || searchWord.value.trim() === '') {
+            ElMessage.warning('请输入搜索词');
+            return;
+        }
         hasSearchResult.value = true;
-        // TODO: 调用API获取分析结果
+        // 执行搜索逻辑
+        kwicSearch();
     };
 
     // 筛选框的复选内容数组
     const leftFilters = [
-        { text: 'L1', value: '1' },
-        { text: 'L2', value: '2' },
-        { text: 'L3', value: '3' },
-        { text: 'L4', value: '4' },
-        { text: 'L5', value: '5' },
-        { text: 'L6', value: '6' },
-        { text: 'L7', value: '7' },
-        { text: 'L8', value: '8' },
-        { text: 'L9', value: '9' },
-        { text: 'L10', value: '0' },
+        { text: 'L1', value: 1 },
+        { text: 'L2', value: 2 },
+        { text: 'L3', value: 3 },
+        { text: 'L4', value: 4 },
+        { text: 'L5', value: 5 },
+        { text: 'L6', value: 6 },
+        { text: 'L7', value: 7 },
+        { text: 'L8', value: 8 },
+        { text: 'L9', value: 9 },
+        { text: 'L10', value: 10 },
     ];
     const rightFilters = [
-        { text: 'R1', value: '1' },
-        { text: 'R2', value: '2' },
-        { text: 'R3', value: '3' },
-        { text: 'R4', value: '4' },
-        { text: 'R5', value: '5' },
-        { text: 'R6', value: '6' },
-        { text: 'R7', value: '7' },
-        { text: 'R8', value: '8' },
-        { text: 'R9', value: '9' },
-        { text: 'R10', value: '0' },
+        { text: 'R1', value: 1 },
+        { text: 'R2', value: 2 },
+        { text: 'R3', value: 3 },
+        { text: 'R4', value: 4 },
+        { text: 'R5', value: 5 },
+        { text: 'R6', value: 6 },
+        { text: 'R7', value: 7 },
+        { text: 'R8', value: 8 },
+        { text: 'R9', value: 9 },
+        { text: 'R10', value: 10 },
     ];
-
-    // 存储选中的复选框内容
-    //----选择第几个词
-    // const selectedLeftFilters = ref(['1', '2', '3', '4', '5']);
-    // const selectedRightFilters = ref(['1', '2', '3', '4', '5']);
-    const selectedLeftFilters = ref(5);
-    const selectedRightFilters = ref(5);
 
     // 控制 Popover 显示状态
     const isLeftPopoverVisible = ref(false);
     const isRightPopoverVisible = ref(false);
 
     // 清空筛选
-    //----选择第几个词
-    // const clearLeftFilter = () => {
-    //     selectedLeftFilters.value = [];
-    // };
-    // const clearRightFilter = () => {
-    //     selectedRightFilters.value = [];
-    // };
+    // ----选择第几个词
     const clearLeftFilter = () => {
-        kwicData.value.leftCount = null;
+        selectedLeftFilters.value = [1, 2, 3, 4, 5];
+        kwicSearch();
     };
     const clearRightFilter = () => {
-        kwicData.value.rightCount = null;
+        selectedRightFilters.value = [1, 2, 3, 4, 5];
+        kwicSearch();
     };
 
     // 应用筛选：关闭 Popover 并打印选中的值
     const applyFilter = () => {
         isLeftPopoverVisible.value = false;
         isRightPopoverVisible.value = false; // 关闭弹出框
+        kwicSearch(); // 重新发起查询
     };
     // 控制 Popover 显示状态
     const isNodePopoverVisible = ref(false);
@@ -240,9 +265,7 @@
     };
 
     //KWIC分页
-    const pageNum = ref(1);
-    const total = ref(50);
-    const pageSize = ref(10); // 每页显示的数据条数
+
     // // 处理分页
     // const handlePageChange = (page: number) => {
     //     pageNum.value = page;
@@ -360,7 +383,10 @@
                 </div>
                 <div v-else>
                     <el-skeleton :loading="vocabLoading" animated :rows="3">
-                        <template #default>
+                        <div class="vocabUsageDescription">
+                            {{ vocabUsageDescription }}
+                        </div>
+                        <!-- <template #default>
                             <div class="vocab-usage-table scrollable">
                                 <el-table
                                     :data="vocabUsageData"
@@ -384,7 +410,7 @@
                                     <el-table-column prop="none" label="None" />
                                 </el-table>
                             </div>
-                        </template>
+                        </template> -->
                     </el-skeleton>
                 </div>
             </el-card>
@@ -392,7 +418,7 @@
             <!-- 全屏弹窗 -->
             <el-dialog
                 v-model="dialogVisible"
-                title="词汇用法总结"
+                title="undergo词汇用法总结"
                 fullscreen
                 :show-close="true"
             >
@@ -515,7 +541,7 @@
                                     </template>
 
                                     <!-- 筛选内容：复选框组 -->
-                                    <!-- <el-checkbox-group
+                                    <el-checkbox-group
                                         v-model="selectedLeftFilters"
                                     >
                                         <el-checkbox
@@ -525,9 +551,9 @@
                                         >
                                             {{ item.text }}
                                         </el-checkbox>
-                                    </el-checkbox-group> -->
+                                    </el-checkbox-group>
                                     <!-- 筛选内容：单选组 -->
-                                    <el-radio-group
+                                    <!-- <el-radio-group
                                         v-model="kwicData.leftCount"
                                     >
                                         <el-radio
@@ -537,7 +563,7 @@
                                         >
                                             {{ item.text }}
                                         </el-radio>
-                                    </el-radio-group>
+                                    </el-radio-group> -->
                                     <!-- 筛选内容：单选组 -->
 
                                     <!-- 筛选操作按钮：两端分布 -->
@@ -546,13 +572,13 @@
                                     >
                                         <el-button
                                             size="small"
-                                            @click="clearLeftFilter"
-                                            >清空</el-button
+                                            @click="clearLeftFilter()"
+                                            >重置</el-button
                                         >
                                         <el-button
                                             size="small"
                                             type="primary"
-                                            @click="applyFilter"
+                                            @click="applyFilter()"
                                             >确定</el-button
                                         >
                                     </div>
@@ -597,7 +623,7 @@
                                     </template>
 
                                     <!-- 筛选内容：复选框组 -->
-                                    <!-- <el-checkbox-group
+                                    <el-checkbox-group
                                         v-model="selectedRightFilters"
                                     >
                                         <el-checkbox
@@ -607,10 +633,10 @@
                                         >
                                             {{ item.text }}
                                         </el-checkbox>
-                                    </el-checkbox-group> -->
+                                    </el-checkbox-group>
 
                                     <!-- 筛选内容：单选组 -->
-                                    <el-radio-group
+                                    <!-- <el-radio-group
                                         v-model="kwicData.rightCount"
                                     >
                                         <el-radio
@@ -620,7 +646,7 @@
                                         >
                                             {{ item.text }}
                                         </el-radio>
-                                    </el-radio-group>
+                                    </el-radio-group> -->
                                     <!-- 筛选内容：单选组 -->
 
                                     <!-- 筛选操作按钮：两端分布 -->
@@ -630,7 +656,7 @@
                                         <el-button
                                             size="small"
                                             @click="clearRightFilter"
-                                            >清空</el-button
+                                            >重置</el-button
                                         >
                                         <el-button
                                             size="small"
@@ -945,5 +971,8 @@
 
     :deep(.el-skeleton__item) {
         margin-bottom: 12px;
+    }
+    .vocabUsageDescription {
+        padding: 40px;
     }
 </style>

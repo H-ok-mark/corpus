@@ -1,96 +1,77 @@
-
 <script setup lang="ts">
     import { ref } from 'vue';
     import { Search } from '@element-plus/icons-vue';
     const word = ref('');
 
-    // 点击搜索按钮触发的方法
-    const onSearch = () => {
-        console.log('搜索内容:', word.value);
-    };
     // 表格数据
     //修改表格排序
     const tableData = ref([
         {
-            word: 'hello',
-            frequency: '1',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '2',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '3',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '4',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '5',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '6',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '7',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '8',
-            range: '10',
-            query_count: '5',
-        },
-        {
-            word: 'hello',
-            frequency: '9',
-            range: '10',
-            query_count: '5',
+            word: '暂无数据',
+            frequency: '暂无数据',
+            range: '暂无数据',
         },
     ]);
-    import { wordsSearchService } from '@/api/words.js';
+    import { wordsListService } from '@/api/words.js';
+    import { ElMessage } from 'element-plus';
+    import { el } from 'element-plus/dist/locale/zh-cn';
 
     //分页条数据模型
     const pageNum = ref(1); //当前页
     const total = ref(100); //总条数
     const pageSize = ref(10); // 每页显示的数据条数
 
-    //调用搜索词频显示函数
-    const searchWords = async () => {
-        let result = await wordsSearchService({
-            params: {
+    const loading = ref(false);
+
+    // 搜索词频显示函数
+    const wordsList = async () => {
+        loading.value = true;
+        try {
+            const result = await wordsListService({
                 word: word.value,
-                page: pageNum.value,
-                size: pageSize.value,
-            },
-        });
-        tableData.value = result.data;
-        total.value = result.data.total;
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+            });
+
+            if (!word.value) {
+                // 获取所有词频列表
+                tableData.value = result.data.map(item => ({
+                    word: item.word,
+                    frequency: item.frequency,
+                    range: item.range,
+                }));
+            } else {
+                // 获取单个词的词频
+                tableData.value = [
+                    {
+                        word: result.data.word,
+                        frequency: result.data.frequency,
+                        range: result.data.range,
+                    },
+                ];
+            }
+
+            total.value = result.data.total || 0;
+        } catch (error) {
+            ElMessage.error('获取词频数据失败');
+            tableData.value = [];
+        } finally {
+            loading.value = false;
+        }
     };
+
     //调用全部词频显示函数
-    searchWords();
+    wordsList();
+
+    const searchWord = () => {
+        console.log('搜索值为：', word.value);
+        wordsList();
+    };
+
     // 处理分页变化
     const handlePageChange = newPage => {
         pageNum.value = newPage;
-        searchWords(); // 当前页码变化时重新发起查询
+        wordsList(); // 当前页码变化时重新发起查询
     };
 </script>
 
@@ -115,7 +96,7 @@
                         class="search-button"
                         type="primary"
                         :icon="Search"
-                        @click="onSearch"
+                        @click="searchWord()"
                         >Search</el-button
                     >
                 </template>

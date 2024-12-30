@@ -1,17 +1,25 @@
 import request from "@/utils/request"
 
-//用户语料库查询---未实现
-export const userCorpusService = (userCorpusData) => {
-    return request.post("/corpus/user", {
-        page: userCorpusData.page,
-        size: userCorpusData.size
-    })
-}
-//搜索用户语料库
-export const userCorpusSearchService = (userCorpusSearchData) => {
-    return request.post('/corpus/select',
-        userCorpusSearchData
-    )
+//语料库列表查询
+export const corpusListService = (corpsListData) => {
+    //若搜索词为空，则默认显示所有语料库
+    if (corpsListData.keyword === null || corpsListData.keyword === "") {
+        return request.get("/corpus/list", {
+            params: {
+                pageNum: corpsListData.pageNum,
+                pageSize: corpsListData.pageSize,
+                keyword: corpsListData.keyword,
+                isUser: corpsListData.isUser,
+            },
+
+        })
+    } else {
+        //搜索词不为空，根据搜索词查询语料库
+        return request.get("/corpus/select", {
+            params: { keyword: corpsListData.keyword }
+        })
+    }
+
 }
 
 // 导入用户语料库服务

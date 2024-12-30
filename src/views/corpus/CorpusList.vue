@@ -3,7 +3,7 @@
     import { Search } from '@element-plus/icons-vue';
 
     // 搜索关键词
-    const searchCorpus = ref(null);
+    const keyword = ref(null);
 
     // 模拟的语料库数据
     const corpusListData = ref([
@@ -26,28 +26,40 @@
             size: '20MB',
         },
     ]);
+    const pageNum = ref(1);
+    const total = ref(20);
+    const pageSize = ref(4); // 每页显示的数据条数
+    const isUser = ref(false);
 
     import { corpusListService, corpusDownloadService } from '@/api/corpusList.js';
     import { ElMessage } from 'element-plus';
+    //获取语料库列表
     const corpusList = async () => {
         let result = await corpusListService({
-            params: {
-                pageNum: pageNum.value,
-                pageSize: pageSize.value,
-                searchCorpus: searchCorpus.value,
-            },
+            pageNum: pageNum.value,
+            pageSize: pageSize.value,
+            keyword: keyword.value,
+            isUser: isUser.value,
         });
-        corpusListData.value = result.data;
-        total.value = result.data.total;
+        // 将筛选后的数据存入 corpusListData
+        corpusListData.value = result.data.map(item => {
+            return {
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                size: '10MB', // 这里可以根据需要设置静态值或动态计算
+            };
+        });
+        // total.value = result.data.total;
+        console.log(corpusListData.value);
     };
     corpusList();
+
     const handleDownload = async id => {
         await corpusDownloadService(id);
         ElMessage.success('下载成功');
     };
-    const pageNum = ref(1);
-    const total = ref(20);
-    const pageSize = ref(4); // 每页显示的数据条数
+
     // 处理分页变化
     const handlePageChange = newPage => {
         pageNum.value = newPage;
@@ -65,13 +77,13 @@
         <!-- 搜索框 -->
         <div class="search-box">
             <el-input
-                v-model="searchCorpus"
+                v-model="keyword"
                 placeholder="请输入语料库名称"
                 class="search-input"
                 size="large"
             >
                 <template #append>
-                    <el-button :icon="Search" @click="corpusList">
+                    <el-button :icon="Search" @click="corpusList()">
                         搜索
                     </el-button>
                 </template>
@@ -82,7 +94,7 @@
         <div class="corpus-list">
             <el-card
                 v-for="corpus in corpusListData"
-                :key="corpus.name"
+                :key="corpus.id"
                 class="corpus-item"
                 shadow="hover"
             >
@@ -122,7 +134,7 @@
                 v-model:current-page="pageNum"
                 v-model:page-size="pageSize"
                 :total="total"
-                layout="jumper,total, prev, pager, next "
+                layout="jumper,total,prev, pager, next "
                 @current-change="handlePageChange"
             />
         </div>

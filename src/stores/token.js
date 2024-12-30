@@ -1,3 +1,7 @@
+// 引入 defineStore
+import { defineStore } from 'pinia';
+
+import { ref } from 'vue'
 export const useTokenStore = defineStore('token', () => {
     //1.定义描述token
     const token = ref('')

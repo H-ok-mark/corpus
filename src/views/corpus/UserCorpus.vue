@@ -7,7 +7,11 @@
     const searchQuery = ref('');
     const importDialogVisible = ref(false);
     const apply = ref(false);
-    const corpusList = ref([
+    //分页查询
+    const pageNum = ref(1);
+    const total = ref(20);
+    const pageSize = ref(4); // 每页显示的数据条数
+    const corpusListData = ref([
         {
             id: 1,
             name: '示例语料库1',
@@ -15,46 +19,40 @@
             createTime: '2024-03-20 10:00:00',
         },
     ]);
-    import {
-        userCorpusSearchService,
-        userCorpusService,
-        userCorpusImportService,
-    } from '@/api/userCorpus';
-    //----未实现
-    const userCorpusList = async () => {
-        let result = await userCorpusService({
-            params: {
-                pageNum: pageNum.value,
-                pageSize: pageSize.value,
-            },
+
+    import { corpusListService, userCorpusImportService } from '@/api/userCorpus';
+
+    const isUser = ref(true);
+    //获取语料库列表
+    const curposList = async () => {
+        let result = await corpusListService({
+            pageNum: pageNum.value,
+            pageSize: pageSize.value,
+            keyword: searchQuery.value,
+            isUser: isUser.value,
         });
-        corpusList.value = result.data;
-        total.value = result.data.total;
-    };
-    userCorpusList();
-    //搜索语料库
-    const handleSearch = async () => {
-        let result = await userCorpusSearchService({
-            params: {
-                searchQuery: searchQuery.value,
-            },
+        // 将筛选后的数据存入 DataData
+        corpusListData.value = result.data.map(item => {
+            return {
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                createTime: item.createdAt,
+            };
         });
-        //？？返回太多东西了
-        corpusList.value = result.data;
-        total.value = result.data.total;
+        // total.value = result.data.total;
+        console.log(corpusListData.value);
     };
-    //分页查询
-    const pageNum = ref(1);
-    const total = ref(20);
-    const pageSize = ref(4); // 每页显示的数据条数
+    curposList();
+
     // 处理分页变化
     const handlePageChange = newPage => {
         pageNum.value = newPage;
-        userCorpusList(); // 当前页码变化时重新发起查询
+        curposList(); // 当前页码变化时重新发起查询
     };
     // 计算属性：过滤后的语料库列表
-    const filteredCorpusList = computed(() => {
-        return corpusList.value.filter(
+    const filteredData = computed(() => {
+        return corpusListData.value.filter(
             corpus =>
                 corpus.name
                     .toLowerCase()
@@ -203,14 +201,14 @@
                     class="search-input"
                     :prefix-icon="Search"
                     clearable
-                    @clear="handleSearch"
-                    @input="handleSearch"
+                    @clear="curposList()"
+                    @input="curposList()"
                 />
             </div>
 
             <!-- 语料库列表 -->
             <div class="list-section">
-                <el-table :data="filteredCorpusList" stripe style="width: 100%">
+                <el-table :data="filteredData" stripe style="width: 100%">
                     <el-table-column
                         prop="name"
                         label="语料库名称"
