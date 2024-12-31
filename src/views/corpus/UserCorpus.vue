@@ -21,6 +21,7 @@
     ]);
 
     import { corpusListService, userCorpusImportService } from '@/api/userCorpus';
+    import { el } from 'element-plus/dist/locale/zh-cn';
 
     const isUser = ref(true);
     //获取语料库列表
@@ -67,6 +68,7 @@
     const showImportDialog = () => {
         importDialogVisible.value = true;
     };
+    //语料库应用
 
     const handleEdit = (row: any) => {
         ElMessageBox.confirm('确定要应用这个语料库吗？', '提示', {
@@ -115,15 +117,6 @@
             });
     };
 
-    const handleUploadSuccess = (response: any, file: any) => {
-        corpusForm.value.files.push(file);
-        ElMessage.success('文件上传成功');
-    };
-
-    const handleUploadError = () => {
-        ElMessage.error('上传失败');
-    };
-
     // 表单数据
     const corpusFormRef = ref();
     const corpusForm = ref({
@@ -133,19 +126,31 @@
     });
     // 上传语料库的函数
     const uploadCorpus = async () => {
-        const formData = new FormData();
-
-        // 将 form 数据添加到 FormData 对象中
-        formData.append('name', corpusForm.value.name);
-        formData.append('description', corpusForm.value.description);
-
-        // 添加文件数据（假设 files 是一个文件数组）
-        corpusForm.value.files.forEach(file => {
-            formData.append('file', file);
-        });
+        if (!corpusFormRef.value) return;
+        const valid = await corpusFormRef.value.validate();
+        if (valid) {
+            const formData = new FormData();
+            // 传递的查询参数
+            const params = {
+                name: corpusForm.value.name,
+                description: corpusForm.value.description,
+            };
+            // 添加文件数据（假设 files 是一个文件数组）
+            corpusForm.value.files.forEach(file => {
+                formData.append('file', file);
+            });
+            // 调用服务，传递 formData 和查询参数
+            let result = await userCorpusImportService(formData, {
+                name: corpusForm.value.name,
+                description: corpusForm.value.description,
+            });
+            ElMessage.success('创建成功');
+            importDialogVisible.value = false;
+            resetForm();
+        }
     };
 
-    // 表单验证规则
+    // 表单校验规则
     const rules = {
         name: [
             { required: true, message: '请输入语料库名称', trigger: 'blur' },
@@ -154,6 +159,18 @@
         description: [
             { required: true, message: '请输入语料库描述', trigger: 'blur' },
             { max: 200, message: '描述不能超过200个字符', trigger: 'blur' },
+        ],
+        files: [
+            { required: true, message: '请上传至少一个文件', trigger: 'change' },
+            {
+                validator: (rule, value, callback) => {
+                    if (corpusForm.value.files.length === 0) {
+                        return callback(new Error('请上传至少一个文件'));
+                    }
+                    callback();
+                },
+                trigger: 'change',
+            },
         ],
     };
 
@@ -179,6 +196,11 @@
             files: [],
         };
         corpusFormRef.value?.resetFields();
+    };
+    // 上传文件变化时的回调
+    const handleFileChange = (file: any, fileList: any) => {
+        // 更新文件列表
+        corpusForm.value.files = fileList.map(item => item.raw); // 保存原始文件对象
     };
 </script>
 
@@ -277,6 +299,7 @@
                 ref="corpusFormRef"
                 label-width="100px"
             >
+                <!-- 语料库名称 -->
                 <el-form-item label="语料库名称" prop="name">
                     <el-input
                         v-model="corpusForm.name"
@@ -284,6 +307,7 @@
                     />
                 </el-form-item>
 
+                <!-- 语料库描述 -->
                 <el-form-item label="语料库描述" prop="description">
                     <el-input
                         v-model="corpusForm.description"
@@ -293,13 +317,14 @@
                     />
                 </el-form-item>
 
-                <el-form-item label="上传文件">
+                <!-- 文件上传 -->
+                <el-form-item label="上传文件" prop="files">
                     <el-upload
                         class="upload-demo"
                         drag
-                        action="/corpus/import"
-                        :on-success="handleUploadSuccess"
-                        :on-error="handleUploadError"
+                        :auto-upload="false"
+                        :on-change="handleFileChange"
+                        multiple
                     >
                         <el-icon class="el-icon--upload">
                             <upload-filled />
@@ -316,12 +341,14 @@
                     </el-upload>
                 </el-form-item>
             </el-form>
+
+            <!-- 弹窗底部 -->
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="importDialogVisible = false"
                         >取消</el-button
                     >
-                    <el-button type="primary" @click="submitForm"
+                    <el-button type="primary" @click="uploadCorpus"
                         >确定</el-button
                     >
                 </div>

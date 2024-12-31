@@ -94,7 +94,7 @@
 
     // KWIC传输数据
     const kwicData = ref({
-        file: 'demo2',
+        file: '红楼梦语料库',
         word: searchWord.value,
         leftPart: [1, 1, 1, 1, 1],
         rightPart: [1, 1, 1, 1, 1],
@@ -132,7 +132,7 @@
             }
         });
         const result = await kwicService({
-            file: 'demo2',
+            file: '红楼梦语料库',
             word: searchWord.value,
             leftpart: leftPart,
             rightpart: rightPart,
@@ -141,7 +141,7 @@
         });
         tableData.value = result.data.map(item => {
             return {
-                file: 'demo2',
+                file: '红楼梦语料库',
                 leftContext: item.leftContext,
                 node: item.keyword,
                 rightContext: item.rightContext,

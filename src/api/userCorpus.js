@@ -23,10 +23,11 @@ export const corpusListService = (corpsListData) => {
 }
 
 // 导入用户语料库服务
-export const userCorpusImportService = (corpusForm) => {
-    return request.post('/corpus/import', corpusForm, {
+export const userCorpusImportService = (formData, params) => {
+    return request.post('/corpus/usercopus', formData, {
+        params: params, // 查询参数
         headers: {
             'Content-Type': 'multipart/form-data', // 自动处理文件上传
-        }
+        },
     });
 };

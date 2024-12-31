@@ -51,7 +51,7 @@
                 ];
             }
 
-            total.value = result.data.total || 0;
+            total.value = result.data.total || 100;
         } catch (error) {
             ElMessage.error('获取词频数据失败');
             tableData.value = [];
