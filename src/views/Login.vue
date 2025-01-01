@@ -66,7 +66,6 @@
         registerData.value.password = loginData.value.password;
         let result = await userRegisterService(registerData.value);
         ElMessage.success('注册成功');
-        // ElMessage.success(result.data.message ? result.data.message : '注册成功');
         clearloginData();
     };
     import { useTokenStore } from '@/stores/token.js';
@@ -78,7 +77,7 @@
             username: loginData.value.username,
             password: loginData.value.password,
         });
-        ElMessage.success(result.data.message ? result.data.message : '登陆成功');
+        ElMessage.success(result.message ? result.message : '登陆成功');
 
         // 使用 Pinia 存储 token
         tokenStore.setToken(result.data);

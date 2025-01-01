@@ -6,7 +6,7 @@
     // 数据定义
     const searchQuery = ref('');
     const importDialogVisible = ref(false);
-    const apply = ref(false);
+    const applyStatus = ref({}); // 将apply改为对象，用于存储每个语料库的应用状态
     //分页查询
     const pageNum = ref(1);
     const total = ref(20);
@@ -20,7 +20,11 @@
         },
     ]);
 
-    import { corpusListService, userCorpusImportService } from '@/api/userCorpus';
+    import {
+        corpusListService,
+        userCorpusImportService,
+        userCorpusDeleteService,
+    } from '@/api/userCorpus';
     import { el } from 'element-plus/dist/locale/zh-cn';
 
     const isUser = ref(true);
@@ -41,7 +45,7 @@
                 createTime: item.createdAt,
             };
         });
-        // total.value = result.data.total;
+        total.value = result.data.total;
         console.log(corpusListData.value);
     };
     curposList();
@@ -68,53 +72,18 @@
     const showImportDialog = () => {
         importDialogVisible.value = true;
     };
-    //语料库应用
-
-    const handleEdit = (row: any) => {
-        ElMessageBox.confirm('确定要应用这个语料库吗？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'info',
-        })
-            .then(() => {
-                // 实现删除逻辑
-                ElMessage.success('应用成功');
-                apply.value = true;
-            })
-            .catch(() => {
-                ElMessage.info('已取消应用');
-            });
-    };
-
-    const handleDelete = (row: any) => {
-        ElMessageBox.confirm('确定要删除这个语料库吗？', '警告', {
+    const handleDelete = async corpusId => {
+        await ElMessageBox.confirm('确定要删除这个语料库吗？', '警告', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning',
-        })
-            .then(() => {
-                // 实现删除逻辑
-                ElMessage.success('删除成功');
-            })
-            .catch(() => {
-                ElMessage.info('已取消删除');
-            });
-    };
+        });
 
-    const handleCancel = (row: any) => {
-        ElMessageBox.confirm('确定要取消应用这个语料库吗？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'info',
-        })
-            .then(() => {
-                // 实现删除逻辑
-                ElMessage.success('取消应用成功');
-                apply.value = false;
-            })
-            .catch(() => {
-                ElMessage.info('已取消操作');
-            });
+        // 调用删除API
+        await userCorpusDeleteService(corpusId);
+        ElMessage.success('删除成功');
+        // 删除成功后刷新列表
+        await curposList();
     };
 
     // 表单数据
@@ -174,20 +143,6 @@
         ],
     };
 
-    // 提交表单
-    const submitForm = () => {
-        if (!corpusFormRef.value) return;
-
-        corpusFormRef.value.validate((valid: boolean) => {
-            if (valid) {
-                // TODO: 实现提交逻辑
-                ElMessage.success('创建成功');
-                importDialogVisible.value = false;
-                resetForm();
-            }
-        });
-    };
-
     // 重置表单
     const resetForm = () => {
         corpusForm.value = {
@@ -201,6 +156,30 @@
     const handleFileChange = (file: any, fileList: any) => {
         // 更新文件列表
         corpusForm.value.files = fileList.map(item => item.raw); // 保存原始文件对象
+    };
+
+    // 当前应用的语料库ID
+    const currentAppliedCorpusId = ref(null);
+
+    // 处理应用语料库
+    const handleApply = corpus => {
+        // 如果已经应用了其他语料库，先取消之前的应用
+        if (
+            currentAppliedCorpusId.value &&
+            currentAppliedCorpusId.value !== corpus.id
+        ) {
+            ElMessage.warning('只能同时应用一个语料库');
+            return;
+        }
+
+        currentAppliedCorpusId.value = corpus.id;
+        ElMessage.success(`已应用语料库：${corpus.name}`);
+    };
+
+    // 处理取消应用
+    const handleCancel = corpus => {
+        currentAppliedCorpusId.value = null;
+        ElMessage.warning(`已取消应用语料库：${corpus.name}`);
     };
 </script>
 
@@ -244,28 +223,28 @@
                     />
                     <el-table-column fixed="right" label="操作" width="180">
                         <template #default="scope">
-                            <!-- 应用成功 -->
                             <el-button
-                                v-if="apply"
+                                v-if="currentAppliedCorpusId === scope.row.id"
                                 type="success"
                                 size="default"
                                 @click="handleCancel(scope.row)"
                             >
                                 取消应用
                             </el-button>
-                            <!-- 未应用 -->
                             <el-button-group v-else>
                                 <el-button
                                     type="primary"
                                     size="default"
-                                    @click="handleEdit(scope.row)"
+                                    :disabled="currentAppliedCorpusId !== null"
+                                    @click="handleApply(scope.row)"
                                 >
                                     应用
                                 </el-button>
+                                <!-- 删除按钮 -->
                                 <el-button
                                     type="danger"
                                     size="default"
-                                    @click="handleDelete(scope.row)"
+                                    @click="handleDelete(scope.row.id)"
                                 >
                                     删除
                                 </el-button>

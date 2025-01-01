@@ -31,3 +31,11 @@ export const userCorpusImportService = (formData, params) => {
         },
     });
 };
+//删除用户语料库
+export const userCorpusDeleteService = (corpusId) => {
+    return request.get('/corpus/delete', {
+        params: {
+            corpusId: corpusId
+        }
+    })
+}
