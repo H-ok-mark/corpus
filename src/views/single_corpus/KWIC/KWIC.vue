@@ -94,7 +94,7 @@
 
     // KWIC传输数据
     const kwicData = ref({
-        file: '红楼梦语料库',
+        file: '鲁滨逊漂流记语料库',
         word: searchWord.value,
         leftPart: [1, 1, 1, 1, 1],
         rightPart: [1, 1, 1, 1, 1],
@@ -106,9 +106,9 @@
     const tableData = ref([
         {
             file: kwicData.value.file,
-            leftContext: 'The',
-            node: 'chair',
-            rightContext: 'of the meeting decided to postpone the vote.',
+            leftContext: null,
+            node: null,
+            rightContext: null,
         },
     ]);
     import { kwicService } from '@/api/KWIC';
@@ -132,7 +132,7 @@
             }
         });
         const result = await kwicService({
-            file: '红楼梦语料库',
+            file: '鲁滨逊漂流记语料库',
             word: searchWord.value,
             leftpart: leftPart,
             rightpart: rightPart,
@@ -141,14 +141,14 @@
         });
         tableData.value = result.data.map(item => {
             return {
-                file: '红楼梦语料库',
+                file: '鲁滨逊漂流记语料库',
                 leftContext: item.leftContext,
                 node: item.keyword,
                 rightContext: item.rightContext,
             };
         });
         console.log(kwicData.value);
-        // total.value = result.data.total;
+        total.value = result.total;
     };
 
     // 处理搜索

@@ -5,7 +5,7 @@ export const wordsListService = (wordsSearchParams) => {
     if (!wordsSearchParams.word) {
         return request.get("/corpus/mono/sort", {
             params: {
-                corpusId: 2,
+                corpusId: 7,
                 pageSize: wordsSearchParams.pageSize,
                 pageNumber: wordsSearchParams.pageNum,
             },
@@ -14,7 +14,7 @@ export const wordsListService = (wordsSearchParams) => {
         return request.get('/corpus/mono/frequency', {
             params: {
                 keyword: wordsSearchParams.word,
-                corpusId: 2,
+                corpusId: 7,
             },
         });
     }

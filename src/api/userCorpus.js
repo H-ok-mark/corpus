@@ -16,7 +16,9 @@ export const corpusListService = (corpsListData) => {
     } else {
         //搜索词不为空，根据搜索词查询语料库
         return request.get("/corpus/select", {
-            params: { keyword: corpsListData.keyword }
+            params: {
+                keyword: corpsListData.keyword,
+            }
         })
     }
 

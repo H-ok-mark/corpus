@@ -10,13 +10,13 @@
     //分页查询
     const pageNum = ref(1);
     const total = ref(20);
-    const pageSize = ref(4); // 每页显示的数据条数
+    const pageSize = ref(10); // 每页显示的数据条数
     const corpusListData = ref([
         {
             id: 1,
             name: '示例语料库1',
             description: '这是一个示例语料库描述',
-            createTime: '2024-03-20 10:00:00',
+            createTime: '2024-03-20',
         },
     ]);
 
@@ -26,6 +26,7 @@
         userCorpusDeleteService,
     } from '@/api/userCorpus';
     import { el } from 'element-plus/dist/locale/zh-cn';
+    import { formatDate } from '@/utils/date';
 
     const isUser = ref(true);
     //获取语料库列表
@@ -37,15 +38,13 @@
             isUser: isUser.value,
         });
         // 将筛选后的数据存入 DataData
-        corpusListData.value = result.data.map(item => {
-            return {
-                id: item.id,
-                name: item.name,
-                description: item.description,
-                createTime: item.createdAt,
-            };
-        });
-        total.value = result.data.total;
+        corpusListData.value = result.data.map(item => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            createTime: formatDate(item.createdAt),
+        }));
+        total.value = result.total;
         console.log(corpusListData.value);
     };
     curposList();
@@ -116,6 +115,7 @@
             ElMessage.success('创建成功');
             importDialogVisible.value = false;
             resetForm();
+            await curposList();
         }
     };
 
@@ -210,11 +210,13 @@
             <!-- 语料库列表 -->
             <div class="list-section">
                 <el-table :data="filteredData" stripe style="width: 100%">
-                    <el-table-column
-                        prop="name"
-                        label="语料库名称"
-                        width="180"
-                    />
+                    <el-table-column prop="name" label="语料库名称" width="180">
+                        <template #default="scope">
+                            <span class="corpus-name">{{
+                                scope.row.name
+                            }}</span>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="description" label="描述" />
                     <el-table-column
                         prop="createTime"
@@ -481,5 +483,10 @@
         margin-top: 20px;
         display: flex;
         justify-content: flex-end;
+    }
+    .corpus-name {
+        font-weight: bold;
+        color: #303133;
+        font-size: 14px;
     }
 </style>

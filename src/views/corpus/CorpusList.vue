@@ -41,6 +41,7 @@
             keyword: keyword.value,
             isUser: isUser.value,
         });
+
         // 将筛选后的数据存入 corpusListData
         corpusListData.value = result.data.map(item => {
             return {
@@ -50,7 +51,7 @@
                 size: '10MB', // 这里可以根据需要设置静态值或动态计算
             };
         });
-        // total.value = result.data.total;
+        total.value = result.total;
         console.log(corpusListData.value);
     };
     corpusList();
