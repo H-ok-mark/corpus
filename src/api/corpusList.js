@@ -20,7 +20,6 @@ export const corpusListService = (corpsListData) => {
             params: { keyword: corpsListData.keyword }
         })
     }
-
 }
 
 

@@ -12,40 +12,40 @@
     // 表格数据
     const tableData = ref([
         {
-            english: 'hello',
-            chinese: '你好',
+            english: 'Hello, how are you?',
+            chinese: '你好，你怎么样？',
         },
         {
-            english: 'world',
-            chinese: '世界',
+            english: 'The world is beautiful.',
+            chinese: '这个世界很美。',
         },
         {
-            english: 'good',
-            chinese: '好',
+            english: 'It is a good day.',
+            chinese: '今天是个好日子。',
         },
         {
-            english: 'bad',
-            chinese: '坏',
+            english: 'This is a bad idea.',
+            chinese: '这是一个坏主意。',
         },
         {
-            english: 'apple',
-            chinese: '苹果',
+            english: 'I love apples.',
+            chinese: '我喜欢苹果。',
         },
         {
-            english: 'banana',
-            chinese: '香蕉',
+            english: 'Bananas are yellow.',
+            chinese: '香蕉是黄色的。',
         },
         {
-            english: 'orange',
-            chinese: '橙子',
+            english: 'Oranges are sweet.',
+            chinese: '橙子很甜。',
         },
         {
-            english: 'watermelon',
-            chinese: '西瓜',
+            english: 'I am eating watermelon.',
+            chinese: '我在吃西瓜。',
         },
         {
-            english: 'grape',
-            chinese: '葡萄',
+            english: 'Grapes are delicious.',
+            chinese: '葡萄很好吃。',
         },
     ]);
 

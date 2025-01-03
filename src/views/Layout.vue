@@ -135,7 +135,7 @@
                 <router-view />
             </el-main>
             <!-- 底部区域 -->
-            <el-footer>©2024 语料库智能应用平台</el-footer>
+            <el-footer>©Corpus+ 语料库智能应用平台</el-footer>
         </el-container>
     </el-container>
 </template>

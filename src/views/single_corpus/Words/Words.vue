@@ -80,6 +80,7 @@
         <template #header>
             <div class="header">
                 <h2>词频统计</h2>
+                <p>当前语料库：《鲁滨逊漂流记语料库》</p>
             </div>
         </template>
 
