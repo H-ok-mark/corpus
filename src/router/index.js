@@ -8,10 +8,6 @@ import TranslationVue from "@/views/double_corpus/Translation.vue";
 import KwicVue from "@/views/single_corpus/KWIC/KWIC.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
 import Welcomevue from "@/views/Welcome.vue"
-//测试界面
-import elPagination from '@/views/test_demo/el-pagination.vue';
-import searchPag from '@/views/test_demo/search-pag.vue';
-
 
 
 
@@ -32,9 +28,7 @@ const routes = [
             { path: "/double-corpus/translation", component: TranslationVue },
             { path: "/corpus/list", component: CorpusListVue },
             { path: "/corpus/users", component: UserCorpusVue },
-            //测试界面
-            { path: "/el-pagination", component: elPagination },
-            { path: "/search-page", component: searchPag },
+
 
 
 

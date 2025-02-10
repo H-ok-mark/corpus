@@ -2,6 +2,7 @@
     import { ref, computed } from 'vue';
     import { Search, Upload, UploadFilled } from '@element-plus/icons-vue';
     import { ElMessage, ElMessageBox } from 'element-plus';
+    import { useCorpusStore } from '@/stores/corpusStore';
 
     // 数据定义
     const searchQuery = ref('');
@@ -158,8 +159,11 @@
         corpusForm.value.files = fileList.map(item => item.raw); // 保存原始文件对象
     };
 
+    // 语料库 store
+    const corpusStore = useCorpusStore();
+
     // 当前应用的语料库ID
-    const currentAppliedCorpusId = ref(null);
+    const currentAppliedCorpusId = ref(corpusStore.appliedCorpusId);
 
     // 处理应用语料库
     const handleApply = corpus => {
@@ -173,12 +177,17 @@
         }
 
         currentAppliedCorpusId.value = corpus.id;
+        // 将当前选择的 corpus 存入 store
+        corpusStore.setCurrentCorpus(corpus);
+        // corpusStore.appliedCorpusId = corpus.id;
+        // corpusStore.appliedCorpusName = corpus.name;
         ElMessage.success(`已应用语料库：${corpus.name}`);
     };
 
     // 处理取消应用
     const handleCancel = corpus => {
         currentAppliedCorpusId.value = null;
+        corpusStore.clearCurrentCorpus();
         ElMessage.warning(`已取消应用语料库：${corpus.name}`);
     };
 </script>

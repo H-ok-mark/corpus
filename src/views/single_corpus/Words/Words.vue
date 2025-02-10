@@ -1,6 +1,9 @@
 <script setup lang="ts">
     import { ref } from 'vue';
     import { Search } from '@element-plus/icons-vue';
+    import { useCorpusStore } from '@/stores/corpusStore';
+
+    const corpusStore = useCorpusStore();
     const word = ref('');
 
     // 表格数据
@@ -51,7 +54,7 @@
                 ];
             }
 
-            total.value = result.total;
+            // total.value = result.total;
         } catch (error) {
             ElMessage.error('获取词频数据失败');
             tableData.value = [];
@@ -80,7 +83,7 @@
         <template #header>
             <div class="header">
                 <h2>词频统计</h2>
-                <p>当前语料库：《鲁滨逊漂流记语料库》</p>
+                <p>当前语料库：《{{ corpusStore.appliedCorpusName }}》</p>
             </div>
         </template>
 
@@ -89,7 +92,7 @@
             <el-input
                 v-model="word"
                 style="max-width: 600px"
-                placeholder="Please input"
+                placeholder="请输入要搜索的单词"
                 size="large"
             >
                 <template #append>
@@ -98,7 +101,7 @@
                         type="primary"
                         :icon="Search"
                         @click="searchWord()"
-                        >Search</el-button
+                        >搜索</el-button
                     >
                 </template>
             </el-input>
@@ -113,14 +116,14 @@
                 :default-sort="{ prop: 'frequency', order: 'descending' }"
                 margin-left="200px"
             >
-                <el-table-column prop="word" label="Word" :width="250" />
+                <el-table-column prop="word" label="单词" :width="250" />
                 <el-table-column
                     prop="frequency"
-                    label="Frequency"
+                    label="次数"
                     :width="250"
                     sortable
                 />
-                <el-table-column prop="range" label="Range" />
+                <el-table-column prop="range" label="频率" />
             </el-table>
         </div>
         <!-- 分页条 -->

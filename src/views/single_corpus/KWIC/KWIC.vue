@@ -80,7 +80,7 @@
         },
     ]);
     const vocabUsageDescription = ref(
-        '“Undergo” 常用于描述主体（如人、组织、系统等）经历某种过程或状态的变化,通常伴随重要的或显著的转变。这些过程多为被动性质，包含医疗（如手术、治疗）、培训（如严格训练）、评估测试（如产品测试）、转型（如重大改革）、翻新（如设施改造）等场景。体现过程的规模、程度或性质。'
+        '“chair” 作为名词时，常用于指代一种供人坐的家具，通常有靠背和四条腿，可用于家庭、办公室、教室等场景。在会议或委员会环境中，“chair” 还可以指会议主席或主持人，负责组织和引导会议流程。作为动词时，“chair” 表示主持会议或担任主席，强调领导和协调的职责。'
     );
 
     // 存储选中的复选框内容
@@ -148,7 +148,7 @@
             };
         });
         console.log(kwicData.value);
-        total.value = result.total;
+        // total.value = result.total;
     };
 
     // 处理搜索
@@ -294,7 +294,7 @@
                 >
                     <template #append>
                         <el-button :icon="Search" @click="handleSearch">
-                            Search
+                            搜索
                         </el-button>
                     </template>
                 </el-input>
@@ -418,7 +418,7 @@
             <!-- 全屏弹窗 -->
             <el-dialog
                 v-model="dialogVisible"
-                title="undergo词汇用法总结"
+                title="chair词汇用法总结"
                 fullscreen
                 :show-close="true"
             >
