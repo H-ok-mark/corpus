@@ -13,6 +13,9 @@
         Operation,
     } from '@element-plus/icons-vue';
     import { ElMessage } from 'element-plus';
+    import { useCorpusStore } from '@/stores/corpusStore';
+
+    const corpusStore = useCorpusStore();
 
     // 搜索词
     const searchWord = ref('');
@@ -94,7 +97,7 @@
 
     // KWIC传输数据
     const kwicData = ref({
-        file: '鲁滨逊漂流记语料库',
+        file: `${corpusStore.appliedCorpusName}`,
         word: searchWord.value,
         leftPart: [1, 1, 1, 1, 1],
         rightPart: [1, 1, 1, 1, 1],
@@ -132,7 +135,7 @@
             }
         });
         const result = await kwicService({
-            file: '鲁滨逊漂流记语料库',
+            file: `${corpusStore.appliedCorpusName}`,
             word: searchWord.value,
             leftpart: leftPart,
             rightpart: rightPart,
@@ -141,7 +144,7 @@
         });
         tableData.value = result.data.map(item => {
             return {
-                file: '鲁滨逊漂流记语料库',
+                file: `${corpusStore.appliedCorpusName}`,
                 leftContext: item.leftContext,
                 node: item.keyword,
                 rightContext: item.rightContext,
@@ -286,6 +289,9 @@
         <el-card class="search-card" shadow="hover">
             <div class="search-area">
                 <h2>KWIC智能分析</h2>
+                <div class="corpus-name">
+                    <p>当前语料库：《{{ corpusStore.appliedCorpusName }}》</p>
+                </div>
                 <el-input
                     v-model="searchWord"
                     placeholder="请输入检索词"
@@ -685,6 +691,11 @@
   
 
 <style scoped>
+    .corpus-name {
+        margin-bottom: 16px;
+        font-size: large;
+    }
+
     .kwic-analysis {
         background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
         min-height: calc(100vh - 48px);

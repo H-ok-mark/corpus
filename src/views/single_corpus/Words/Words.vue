@@ -2,12 +2,13 @@
     import { ref } from 'vue';
     import { Search } from '@element-plus/icons-vue';
     import { useCorpusStore } from '@/stores/corpusStore';
+    // import type { WordData } from '@/utils/apiTypes';
 
     const corpusStore = useCorpusStore();
     const word = ref('');
 
     // 表格数据
-    //修改表格排序
+    // 修改表格排序
     const tableData = ref([
         {
             word: '暂无数据',
@@ -15,13 +16,14 @@
             range: '暂无数据',
         },
     ]);
+
     import { wordsListService } from '@/api/words.js';
     import { ElMessage } from 'element-plus';
     import { el } from 'element-plus/dist/locale/zh-cn';
 
     //分页条数据模型
     const pageNum = ref(1); //当前页
-    const total = ref(100); //总条数
+    const total = ref(1000); //总条数
     const pageSize = ref(10); // 每页显示的数据条数
 
     const loading = ref(false);
@@ -31,20 +33,19 @@
         loading.value = true;
         try {
             const result = await wordsListService({
+                corpusId: corpusStore.appliedCorpusId,
                 word: word.value,
                 pageNum: pageNum.value,
                 pageSize: pageSize.value,
             });
 
             if (!word.value) {
-                // 获取所有词频列表
                 tableData.value = result.data.map(item => ({
                     word: item.word,
                     frequency: item.frequency,
                     range: item.range,
                 }));
             } else {
-                // 获取单个词的词频
                 tableData.value = [
                     {
                         word: result.data.word,
@@ -53,8 +54,7 @@
                     },
                 ];
             }
-
-            // total.value = result.total;
+            // total.value = result.data.total;
         } catch (error) {
             ElMessage.error('获取词频数据失败');
             tableData.value = [];
@@ -62,6 +62,31 @@
             loading.value = false;
         }
     };
+
+    // const wordsList = async () => {
+    //     loading.value = true;
+    //     try {
+    //         const result = await wordsListService({
+    //             corpusId: corpusStore.appliedCorpusId, // 示例ID
+    //             word: word.value,
+    //             pageNum: pageNum.value,
+    //             pageSize: pageSize.value,
+    //         });
+    //         const responseData = result.data;
+    //         // 若未搜索词，则 data 为 WordDataArray，否则为单个 WordData 对象
+    //         if (!word.value) {
+    //             tableData.value = responseData.data as WordData[];
+    //         } else {
+    //             tableData.value = [responseData.data as WordData];
+    //         }
+    //         total.value = responseData.total;
+    //     } catch (error) {
+    //         ElMessage.error('获取词频数据失败');
+    //         tableData.value = [];
+    //     } finally {
+    //         loading.value = false;
+    //     }
+    // };
 
     //调用全部词频显示函数
     wordsList();
