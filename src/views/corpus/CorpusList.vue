@@ -56,9 +56,45 @@
     };
     corpusList();
 
-    const handleDownload = async id => {
-        await corpusDownloadService(id);
-        ElMessage.success('下载成功');
+    //下载语料库
+    const handleDownload = async (id: number) => {
+        try {
+            console.log('下载语料库:', id);
+            const response = await corpusDownloadService(id);
+            // 创建 Blob 对象，确保类型为 application/octet-stream
+            const blob = new Blob([response.data], {
+                type: 'application/octet-stream',
+            });
+            // 尝试从响应头中获取 filename，若无效则使用默认文件名
+            const disposition = response.headers?.['content-disposition'];
+            let filename = 'download.bin';
+            if (disposition && disposition.indexOf('filename') !== -1) {
+                const match = disposition.match(/filename\*?=([^;]+)/i);
+                if (match && match[1]) {
+                    filename = match[1].replace(/UTF-8''/i, '').trim();
+                    filename = filename.replace(/['"]/g, '');
+                    try {
+                        filename = decodeURIComponent(filename);
+                    } catch (e) {
+                        console.warn('文件名解码失败，使用默认文件名');
+                        filename = 'download.txt';
+                    }
+                }
+            }
+            // 因为后端返回的 header 无效，您也可以直接定义文件名
+            // filename = '学术论文用词趋势.txt';
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('下载出错：', error);
+            console.log(Blob);
+        }
     };
 
     // 处理分页变化

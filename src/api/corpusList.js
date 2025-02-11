@@ -23,8 +23,12 @@ export const corpusListService = (corpsListData) => {
 }
 
 
-//语料库下载
+// 语料库下载
 export const corpusDownloadService = (corpusDownloadId) => {
-    return request.get("/corpus/download", corpusDownloadId
-    )
+    return request.get("/corpus/download", {
+        params: {
+            corpusId: corpusDownloadId
+        },
+        responseType: 'blob'
+    });
 }

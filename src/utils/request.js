@@ -26,6 +26,10 @@ instance.interceptors.request.use((config) => {
 //添加响应拦截器
 instance.interceptors.response.use(
     result => {
+        // 如果是 blob 类型的响应，则返回完整的 result 对象，否则处理业务状态码
+        if (result.config.responseType === 'blob') {
+            return result;
+        }
         //判断业务状态码
         if (result.data.code === 0) {
             return result.data;
@@ -37,11 +41,14 @@ instance.interceptors.response.use(
     },
     err => {
         //如果响应状态码为401，代表未登录，给出对应提示，并跳转到登录页面
-        if (err.response.status === 401) {
+        if (err.response && err.response.status === 401) {
             ElMessage.error("请先登录!")
             router.push("/login")
         }
-        ElMessage.error(result.data.message ? result.data.message : "服务异常")
+        const errorMsg = err.response && err.response.data && err.response.data.message
+            ? err.response.data.message
+            : "服务异常";
+        ElMessage.error(errorMsg);
         return Promise.reject(err);//异步的状态转化成失败的状态
     }
 )

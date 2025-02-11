@@ -11,9 +11,9 @@
     // 修改表格排序
     const tableData = ref([
         {
-            word: '暂无数据',
-            frequency: '暂无数据',
-            range: '暂无数据',
+            word: '',
+            frequency: '',
+            range: '',
         },
     ]);
 
@@ -54,7 +54,7 @@
                     },
                 ];
             }
-            // total.value = result.data.total;
+            total.value = result.total;
         } catch (error) {
             ElMessage.error('获取词频数据失败');
             tableData.value = [];
