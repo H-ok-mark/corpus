@@ -45,7 +45,7 @@
             description: item.description,
             createTime: formatDate(item.createdAt),
         }));
-        // total.value = result.total;
+        total.value = result.total;
         console.log(corpusListData.value);
     };
     curposList();

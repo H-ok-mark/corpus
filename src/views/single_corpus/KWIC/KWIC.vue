@@ -281,6 +281,10 @@
         pageNum.value = newPage;
         kwicSearch(); // 当前页码变化时重新发起查询
     };
+    const handleSizeChange = (val: number) => {
+        pageSize.value = val;
+        kwicSearch(); // 当前页码变化时重新发起查询
+    };
 </script>
 
 <template>
@@ -676,11 +680,15 @@
                         </template>
                     </el-table-column>
                 </el-table>
+                <!-- 分页条 -->
                 <div class="pagination">
                     <el-pagination
                         v-model:current-page="pageNum"
+                        :page-sizes="[10, 15, 20]"
                         :page-size="pageSize"
                         :total="total"
+                        layout="sizes, prev, pager, next,total"
+                        @size-change="handleSizeChange"
                         @current-change="handlePageChange"
                     />
                 </div>

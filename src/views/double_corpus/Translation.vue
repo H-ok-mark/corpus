@@ -52,10 +52,14 @@
     //分页条数据模型
     const pageNum = ref(1); //当前页
     const total = ref(20); //总条数
+    const pageSize = ref(10); // 每页显示的数据条数
 
-    //当前页码发生变化，调用此函数
-    const onCurrentChange = num => {
-        pageNum.value = num;
+    // 分页条大小改变时触发
+    const handleSizeChange = (val: number) => {
+        pageSize.value = val;
+    };
+    const handlePageChange = (val: number) => {
+        pageNum.value = val;
     };
 
     // 文件列表状态
@@ -190,13 +194,18 @@
                 <el-table-column prop="chinese" label="Chinese" />
             </el-table>
         </div>
+        <!-- layout="sizes, jumper, total, prev, pager, next" -->
+
         <!-- 分页条 -->
         <el-pagination
             v-model:current-page="pageNum"
-            layout="jumper, total, prev, pager, next"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 15, 20]"
+            layout="sizes, jumper, total, prev, pager, next"
             background
             :total="total"
-            @current-change="onCurrentChange"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
             style="margin-top: 20px; justify-content: flex-end"
         />
     </el-card>

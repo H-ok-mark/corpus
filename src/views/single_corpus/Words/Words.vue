@@ -20,14 +20,17 @@
     import { wordsListService } from '@/api/words.js';
     import { ElMessage } from 'element-plus';
     import { el } from 'element-plus/dist/locale/zh-cn';
+    import type { ComponentSize } from 'element-plus';
 
     //分页条数据模型
     const pageNum = ref(1); //当前页
-    const total = ref(1000); //总条数
+    const total = ref(5000); //总条数
     const pageSize = ref(10); // 每页显示的数据条数
+    const size = ref<ComponentSize>('default');
 
     const loading = ref(false);
 
+    const allwords = ref(true);
     // 搜索词频显示函数
     const wordsList = async () => {
         loading.value = true;
@@ -45,6 +48,7 @@
                     frequency: item.frequency,
                     range: item.range,
                 }));
+                allwords.value = true;
             } else {
                 tableData.value = [
                     {
@@ -53,8 +57,8 @@
                         range: result.data.range,
                     },
                 ];
+                allwords.value = false;
             }
-            total.value = result.total;
         } catch (error) {
             ElMessage.error('获取词频数据失败');
             tableData.value = [];
@@ -62,31 +66,6 @@
             loading.value = false;
         }
     };
-
-    // const wordsList = async () => {
-    //     loading.value = true;
-    //     try {
-    //         const result = await wordsListService({
-    //             corpusId: corpusStore.appliedCorpusId, // 示例ID
-    //             word: word.value,
-    //             pageNum: pageNum.value,
-    //             pageSize: pageSize.value,
-    //         });
-    //         const responseData = result.data;
-    //         // 若未搜索词，则 data 为 WordDataArray，否则为单个 WordData 对象
-    //         if (!word.value) {
-    //             tableData.value = responseData.data as WordData[];
-    //         } else {
-    //             tableData.value = [responseData.data as WordData];
-    //         }
-    //         total.value = responseData.total;
-    //     } catch (error) {
-    //         ElMessage.error('获取词频数据失败');
-    //         tableData.value = [];
-    //     } finally {
-    //         loading.value = false;
-    //     }
-    // };
 
     //调用全部词频显示函数
     wordsList();
@@ -100,6 +79,10 @@
     const handlePageChange = newPage => {
         pageNum.value = newPage;
         wordsList(); // 当前页码变化时重新发起查询
+    };
+    const handleSizeChange = (val: number) => {
+        pageSize.value = val;
+        wordsList(); // 每页显示条数变化时重新发起查询
     };
 </script>
 
@@ -151,12 +134,16 @@
                 <el-table-column prop="range" label="频率" />
             </el-table>
         </div>
-        <!-- 分页条 -->
+        <!-- 分页条1 -->
         <el-pagination
+            v-if="allwords"
             v-model:current-page="pageNum"
-            layout="jumper, total, prev, pager, next"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 15, 20]"
+            layout="sizes,jumper, prev, pager, next"
             background
             :total="total"
+            @size-change="handleSizeChange"
             @current-change="handlePageChange"
             style="margin-top: 20px; justify-content: flex-end"
         />
