@@ -165,17 +165,6 @@
         transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
     }
 
-    /* 悬停时的样式 */
-    .words-search .search-button:hover {
-        background-color: #b4b8bb; /* 悬停时灰色变浅 */
-        color: #fff;
-    }
-
-    /* 点击时的样式：按下按钮时缩小 */
-    .words-search .search-button:active {
-        transform: scale(0.95); /* 缩小按钮 5% */
-        background-color: #63696b; /* 点击时按钮的灰色变深 */
-    }
     .search-result {
         margin-top: 20px;
         display: flex;
