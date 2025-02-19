@@ -1,8 +1,8 @@
 <script setup lang="ts">
     import { ref } from 'vue';
-    import { Search } from '@element-plus/icons-vue';
-    import { ElMessage, ElMessageBox } from 'element-plus';
-    import type { UploadProps, UploadUserFile } from 'element-plus';
+    import { ElMessage } from 'element-plus';
+    import type { UploadUserFile } from 'element-plus';
+    import { Loading } from 'element-plus/es/components/loading/src/service';
 
     // 表格数据
     const tableData = ref([
@@ -43,19 +43,12 @@
                 '量子计算代表着一种根本性的新计算方法。传统计算机使用非0即1的比特运算，而量子计算机使用量子比特，可以同时存在于多个状态。这种被称为叠加态的特性，以及其他量子现象，可能使量子计算机以指数级的速度解决某些问题，远快于经典计算机。',
         },
     ]);
-
-    //分页条数据模型
-    const pageNum = ref(1); //当前页
-    const total = ref(20); //总条数
+    // 转圈加载状态
+    const loading = ref(false);
+    // 分页条数据模型
+    const pageNum = ref(1); // 当前页
+    const total = ref(20); // 总条数
     const pageSize = ref(10); // 每页显示的数据条数
-
-    // 分页条大小改变时触发
-    const handleSizeChange = (val: number) => {
-        pageSize.value = val;
-    };
-    const handlePageChange = (val: number) => {
-        pageNum.value = val;
-    };
 
     // 文件列表状态
     const singleDocFileList = ref<UploadUserFile[]>([]);
@@ -80,6 +73,19 @@
         ElMessage.success(`${type === 'english' ? '英文' : '中文'}文档上传成功`);
     };
 
+    const isAlignment = ref(false);
+
+    const setIsAlignment = (value: boolean) => {
+        isAlignment.value = value;
+        sessionStorage.setItem('isAlignment', String(value));
+    };
+    // 从 sessionStorage 中读取 isAlignment 值
+
+    const storedAlignment = sessionStorage.getItem('isAlignment');
+    if (storedAlignment === 'true') {
+        isAlignment.value = true;
+    }
+
     // 开始对齐处理
     const handleStartAlignment = async (mode: 'single' | 'double') => {
         if (mode === 'single' && !singleDocFileList.value.length) {
@@ -99,135 +105,361 @@
             // TODO: 调用对齐API
             await new Promise(resolve => setTimeout(resolve, 1000));
             ElMessage.success('对齐完成');
+            setIsAlignment(true);
         } catch (error) {
             ElMessage.error('对齐失败');
         }
     };
 
-    //单/双文档选择
+    // 单/双文档选择状态
     const simple = ref(true);
-    //单/双文档选项
     const fileRadio = ref('单文档对齐');
+
+    // 当前选项卡
+    const activeTab = ref('import');
+
+    // // 对齐分析的结果数据
+    // const sentenceAlignment = ref<any[]>([]);
+    // const phraseAlignment = ref<any[]>([]);
+    // const contextAnalysis = ref<any[]>([]);
+    // const versionsAnalysis = ref<any[]>([]);
+
+    // 对齐分析的结果数据（添加初始数据）
+    const sentenceAlignment = ref<any[]>([
+        {
+            align_sentence_id: 1,
+            source_text: 'This is the first source sentence.',
+            target_text: '这是第一条目标句子。',
+        },
+        {
+            align_sentence_id: 305,
+            source_text: '本文试将义和团事件置于历史转变进程中考察',
+            target_text: 'This chapter is an examination of the Boxer Incident',
+        },
+    ]);
+    const phraseAlignment = ref<any[]>([
+        {
+            align_phrase_id: 150,
+            source_word: 'examination',
+            target_word: '考察',
+            strategy: '直译',
+        },
+        {
+            align_phrase_id: 151,
+            source_word: 'Boxer Incident',
+            target_word: '义和团事件',
+            strategy: '直译',
+        },
+    ]);
+    const contextAnalysis = ref<any[]>([
+        { target_word: 'grass', context: '绿草如茵的草坪', strategy: '直译' },
+        { target_word: 'thatch', context: '茅草屋顶的建筑', strategy: '意译' },
+    ]);
+    const versionsAnalysis = ref<any[]>([
+        {
+            target_corpus_id: 8902,
+            target_text: 'This chapter is an examination...',
+            strategy: '意译',
+        },
+        {
+            target_corpus_id: 8903,
+            target_text: 'In this paper, the Boxer Incident...',
+            strategy: '意译',
+        },
+    ]);
 </script>
 
 <template>
-    <el-card class="translation-container">
-        <!-- 单双文档选择器 -->
-        <div class="simple-file-radio">
-            <el-radio-group v-model="fileRadio" size="large">
-                <el-radio-button
-                    label="单文档对齐"
-                    value="单文档对齐"
-                    @click="simple = true"
-                />
-                <el-radio-button
-                    label="双文档对齐"
-                    value="双文档对齐"
-                    @click="simple = false"
-                />
-            </el-radio-group>
-        </div>
-        <!-- 单文档对齐 -->
-        <div class="simple-file" v-if="simple">
-            <el-upload
-                v-model:file-list="singleDocFileList"
-                v-bind="uploadConfig"
-                class="upload-btn"
-                @success="handleSingleUploadSuccess"
-            >
-                <el-button type="primary">上传文档</el-button>
-                <template #tip>
-                    <div class="upload-tip">支持 Word、Excel、PDF 格式</div>
-                </template>
-            </el-upload>
-            <el-button type="success" @click="handleStartAlignment('single')"
-                >开始对齐</el-button
-            >
-        </div>
+    <div class="bilingual-corpus">
+        <el-card class="translation-container">
+            <!-- 选项卡 -->
+            <div>
+                <el-tabs v-model="activeTab" type="card">
+                    <el-tab-pane label="导入平行语料" name="import">
+                        <!-- 单双文档选择器 -->
+                        <div class="simple-file-radio">
+                            <el-radio-group v-model="fileRadio" size="large">
+                                <el-radio-button
+                                    label="单文档对齐"
+                                    value="单文档对齐"
+                                    @click="simple = true"
+                                />
+                                <el-radio-button
+                                    label="双文档对齐"
+                                    value="双文档对齐"
+                                    @click="simple = false"
+                                />
+                            </el-radio-group>
+                        </div>
 
-        <!-- 双文档对齐 -->
-        <div class="double-file" v-else>
-            <div class="upload-group">
-                <h4>英文文档</h4>
-                <el-upload
-                    v-model:file-list="doubleDocFileList.english"
-                    v-bind="uploadConfig"
-                    class="upload-btn"
-                    @success="() => handleDoubleUploadSuccess('english')"
-                >
-                    <el-button type="primary">上传文档</el-button>
-                </el-upload>
+                        <!-- 单文档对齐 -->
+                        <div class="simple-file" v-if="simple">
+                            <el-upload
+                                v-model:file-list="singleDocFileList"
+                                v-bind="uploadConfig"
+                                class="upload-btn"
+                                @success="handleSingleUploadSuccess"
+                            >
+                                <el-button type="primary">上传文档</el-button>
+                                <template #tip>
+                                    <div class="upload-tip">
+                                        支持 Word、Excel、PDF 格式
+                                    </div>
+                                </template>
+                            </el-upload>
+                            <el-button
+                                type="success"
+                                @click="handleStartAlignment('single')"
+                                >开始对齐</el-button
+                            >
+                        </div>
+
+                        <!-- 双文档对齐 -->
+                        <div class="double-file" v-else>
+                            <div class="upload-group">
+                                <h4>英文文档</h4>
+                                <el-upload
+                                    v-model:file-list="
+                                        doubleDocFileList.english
+                                    "
+                                    v-bind="uploadConfig"
+                                    class="upload-btn"
+                                    @success="
+                                        () =>
+                                            handleDoubleUploadSuccess('english')
+                                    "
+                                >
+                                    <el-button type="primary"
+                                        >上传文档</el-button
+                                    >
+                                </el-upload>
+                            </div>
+                            <el-button
+                                class="upload-group"
+                                type="success"
+                                @click="handleStartAlignment('double')"
+                                >开始对齐</el-button
+                            >
+                            <div class="upload-group">
+                                <h4>中文文档</h4>
+                                <el-upload
+                                    v-model:file-list="
+                                        doubleDocFileList.chinese
+                                    "
+                                    v-bind="uploadConfig"
+                                    class="upload-btn"
+                                    @success="
+                                        () =>
+                                            handleDoubleUploadSuccess('chinese')
+                                    "
+                                >
+                                    <el-button type="primary"
+                                        >上传文档</el-button
+                                    >
+                                </el-upload>
+                            </div>
+                        </div>
+                        <!-- 结果表格 -->
+                        <div v-if="isAlignment" class="result">
+                            <el-table
+                                :data="tableData"
+                                stripe
+                                style="width: 100%"
+                                :border="true"
+                            >
+                                <el-table-column
+                                    prop="english"
+                                    label="English"
+                                />
+                                <el-table-column
+                                    prop="chinese"
+                                    label="Chinese"
+                                />
+                            </el-table>
+                        </div>
+                        <!-- 分页器 -->
+                        <div class="pagination-wrapper">
+                            <el-pagination
+                                v-model:current-page="pageNum"
+                                v-model:page-size="pageSize"
+                                :page-sizes="[10, 15, 20]"
+                                layout="sizes, jumper, total, prev, pager, next"
+                                :total="total"
+                                background
+                            />
+                        </div>
+                    </el-tab-pane>
+
+                    <!-- 句子对齐分析 -->
+                    <el-tab-pane label="句子对齐分析" name="sentence">
+                        <div v-if="isAlignment" class="result-area">
+                            <el-table
+                                v-loading="loading"
+                                :data="sentenceAlignment"
+                                border
+                                stripe
+                            >
+                                <el-table-column
+                                    prop="align_sentence_id"
+                                    label="记录ID"
+                                    width="100"
+                                />
+                                <el-table-column
+                                    prop="source_text"
+                                    label="源句子"
+                                    show-overflow-tooltip
+                                />
+                                <el-table-column
+                                    prop="target_text"
+                                    label="目标句子"
+                                    show-overflow-tooltip
+                                />
+                            </el-table>
+                        </div>
+                        <!-- 分页器 -->
+                        <div class="pagination-wrapper">
+                            <el-pagination
+                                v-model:current-page="pageNum"
+                                v-model:page-size="pageSize"
+                                :page-sizes="[10, 15, 20]"
+                                layout="sizes, jumper, total, prev, pager, next"
+                                :total="total"
+                                background
+                            />
+                        </div>
+                    </el-tab-pane>
+
+                    <!-- 词汇对齐分析 -->
+                    <el-tab-pane label="词汇对齐分析" name="phrase">
+                        <div v-if="isAlignment" class="result-area">
+                            <el-table :data="phraseAlignment" border stripe>
+                                <el-table-column
+                                    prop="align_phrase_id"
+                                    label="记录ID"
+                                    width="100"
+                                />
+                                <el-table-column
+                                    prop="source_word"
+                                    label="源词"
+                                />
+                                <el-table-column
+                                    prop="target_word"
+                                    label="目标词"
+                                />
+                                <el-table-column
+                                    prop="strategy"
+                                    label="翻译策略"
+                                    width="120"
+                                />
+                            </el-table>
+                        </div>
+                        <!-- 分页器 -->
+                        <div class="pagination-wrapper">
+                            <el-pagination
+                                v-model:current-page="pageNum"
+                                v-model:page-size="pageSize"
+                                :page-sizes="[10, 15, 20]"
+                                layout="sizes, jumper, total, prev, pager, next"
+                                :total="total"
+                                background
+                            />
+                        </div>
+                    </el-tab-pane>
+
+                    <!-- 多语境翻译分析 -->
+                    <el-tab-pane label="多语境翻译分析" name="context">
+                        <div v-if="isAlignment" class="result-area">
+                            <el-table :data="contextAnalysis" border stripe>
+                                <el-table-column
+                                    prop="target_word"
+                                    label="翻译结果"
+                                />
+                                <el-table-column
+                                    prop="context"
+                                    label="上下文"
+                                    show-overflow-tooltip
+                                />
+                                <el-table-column
+                                    prop="strategy"
+                                    label="翻译策略"
+                                    width="120"
+                                />
+                            </el-table>
+                        </div>
+                        <!-- 分页器 -->
+                        <div class="pagination-wrapper">
+                            <el-pagination
+                                v-model:current-page="pageNum"
+                                v-model:page-size="pageSize"
+                                :page-sizes="[10, 15, 20]"
+                                layout="sizes, jumper, total, prev, pager, next"
+                                :total="total"
+                                background
+                            />
+                        </div>
+                    </el-tab-pane>
+
+                    <!-- 多译本对比分析 -->
+                    <el-tab-pane label="多译本对比分析" name="versions">
+                        <div v-if="isAlignment" class="result-area">
+                            <el-table :data="versionsAnalysis" border stripe>
+                                <el-table-column
+                                    prop="target_corpus_id"
+                                    label="目标语料库ID"
+                                    width="120"
+                                />
+                                <el-table-column
+                                    prop="target_text"
+                                    label="译本内容"
+                                    show-overflow-tooltip
+                                />
+                                <el-table-column
+                                    prop="strategy"
+                                    label="翻译策略"
+                                    width="120"
+                                />
+                            </el-table>
+                        </div>
+                        <!-- 分页器 -->
+                        <div class="pagination-wrapper">
+                            <el-pagination
+                                v-model:current-page="pageNum"
+                                v-model:page-size="pageSize"
+                                :page-sizes="[10, 15, 20]"
+                                layout="sizes, jumper, total, prev, pager, next"
+                                :total="total"
+                                background
+                            />
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
             </div>
-            <el-button
-                class="upload-group"
-                type="success"
-                @click="handleStartAlignment('double')"
-                >开始对齐</el-button
-            >
-            <div class="upload-group">
-                <h4>中文文档</h4>
-                <el-upload
-                    v-model:file-list="doubleDocFileList.chinese"
-                    v-bind="uploadConfig"
-                    class="upload-btn"
-                    @success="() => handleDoubleUploadSuccess('chinese')"
-                >
-                    <el-button type="primary">上传文档</el-button>
-                </el-upload>
-            </div>
-        </div>
-
-        <!-- 结果表格 -->
-        <div class="result">
-            <el-table
-                :data="tableData"
-                stripe
-                style="width: 100%"
-                :border="true"
-            >
-                <el-table-column prop="english" label="English" />
-                <el-table-column prop="chinese" label="Chinese" />
-            </el-table>
-        </div>
-        <!-- layout="sizes, jumper, total, prev, pager, next" -->
-
-        <!-- 分页条 -->
-        <el-pagination
-            v-model:current-page="pageNum"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 15, 20]"
-            layout="sizes, jumper, total, prev, pager, next"
-            background
-            :total="total"
-            @size-change="handleSizeChange"
-            @current-change="handlePageChange"
-            style="margin-top: 20px; justify-content: flex-end"
-        />
-    </el-card>
+        </el-card>
+    </div>
 </template>
-
+  
 <style scoped>
     .translation-container {
         min-height: 100%;
         padding: 20px;
         box-sizing: border-box;
     }
-    .header {
+    .simple-file-radio {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        justify-content: left;
+        margin-left: 10px;
+        text-align: center;
+        height: 150px;
     }
     .simple-file {
         display: flex;
         justify-content: center;
-        margin-top: 10px;
         text-align: center;
         height: 150px;
     }
     .double-file {
         display: flex;
         justify-content: center;
-        margin-top: 10px;
         text-align: center;
         height: 150px;
     }
@@ -243,15 +475,66 @@
     .upload-group {
         text-align: center;
     }
-
     .upload-group h4 {
         margin-bottom: 16px;
         color: #606266;
     }
-
     .upload-tip {
         font-size: 14px;
         color: #909399;
         margin-top: 8px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .page-header h2 {
+        font-size: 32px;
+        color: #2c3e50;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .el-table {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    :deep(.el-table__header) {
+        background-color: #f5f7fa;
+    }
+    :deep(.el-table__row) {
+        transition: background-color 0.3s;
+    }
+    :deep(.el-table__row:hover) {
+        background-color: #f5f7fa;
+    }
+    .pagination-wrapper {
+        display: flex;
+        justify-content: right;
+        margin-top: 30px;
+    }
+    .el-form-item:last-child {
+        margin-bottom: 0;
+    }
+    .el-button {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+    /* 响应式布局 */
+    @media (max-width: 768px) {
+        .bilingual-corpus {
+            padding: 20px;
+        }
+        .analysis-section {
+            padding: 15px;
+        }
+        .input-area,
+        .result-area {
+            padding: 15px;
+        }
+        .page-header h2 {
+            font-size: 24px;
+        }
     }
 </style>

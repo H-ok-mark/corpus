@@ -14,6 +14,7 @@
         Search,
         Notebook,
         Compass,
+        MagicStick,
     } from '@element-plus/icons-vue';
     import avatar from '@/assets/default.png';
     import { useRouter } from 'vue-router';
@@ -51,9 +52,9 @@
 
                 <el-menu-item index="/double-corpus/test">
                     <el-icon>
-                        <House />
+                        <MagicStick />
                     </el-icon>
-                    <span>双语料测试界面</span>
+                    <span>测试界面</span>
                 </el-menu-item>
 
                 <el-menu-item index="/double-corpus/translation">
