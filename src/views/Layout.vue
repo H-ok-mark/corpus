@@ -49,6 +49,13 @@
                     <span>首页</span>
                 </el-menu-item>
 
+                <el-menu-item index="/double-corpus/test">
+                    <el-icon>
+                        <House />
+                    </el-icon>
+                    <span>双语料测试界面</span>
+                </el-menu-item>
+
                 <el-menu-item index="/double-corpus/translation">
                     <el-icon>
                         <EditPen />
@@ -99,7 +106,7 @@
             <!-- 头部区域 -->
             <el-header>
                 <div>
-                    <strong> </strong>
+                    <strong> e1</strong>
                 </div>
                 <!-- 头像区域 -->
                 <el-dropdown placement="bottom-end" @command="handleCommand">

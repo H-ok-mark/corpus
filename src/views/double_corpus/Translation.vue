@@ -3,49 +3,44 @@
     import { Search } from '@element-plus/icons-vue';
     import { ElMessage, ElMessageBox } from 'element-plus';
     import type { UploadProps, UploadUserFile } from 'element-plus';
-    const words = ref('');
 
-    // 点击搜索按钮触发的方法
-    const onSearch = () => {
-        console.log('搜索内容:', words.value);
-    };
     // 表格数据
     const tableData = ref([
         {
-            english: 'Hello, how are you?',
-            chinese: '你好，你怎么样？',
+            english:
+                "The Industrial Revolution, which took place from the 18th to 19th centuries, was a period during which predominantly agrarian, rural societies in Europe and America became industrial and urban. Before the Industrial Revolution, manufacturing was often done in people's homes, using hand tools or basic machines.",
+            chinese:
+                '工业革命发生在18世纪至19世纪，在此期间，欧洲和美洲以农业为主的乡村社会转变为工业化和城市化社会。在工业革命之前，制造业通常在人们的家中进行，使用手工工具或基本机器。',
         },
         {
-            english: 'The world is beautiful.',
-            chinese: '这个世界很美。',
+            english:
+                'Climate change is one of the greatest challenges facing humanity today. It affects every country and can have devastating effects on communities, economies and ecosystems. Rising global temperatures have been accompanied by changes in weather and climate, with many places experiencing altered rainfall patterns, more extreme weather events, and rising sea levels.',
+            chinese:
+                '气候变化是当今人类面临的最大挑战之一。它影响着每个国家，可能对社区、经济和生态系统产生毁灭性影响。全球气温上升伴随着天气和气候的变化，许多地方经历着降雨模式的改变、更极端的天气事件和海平面上升。',
         },
         {
-            english: 'It is a good day.',
-            chinese: '今天是个好日子。',
+            english:
+                'The development of artificial intelligence (AI) represents one of the most significant technological advancements in human history. AI systems can now perform tasks that once required human intelligence, such as visual perception, speech recognition, decision-making, and language translation. This technology has the potential to revolutionize virtually every field and industry.',
+            chinese:
+                '人工智能(AI)的发展代表着人类历史上最重要的技术进步之一。人工智能系统现在可以执行曾经需要人类智能的任务，如视觉感知、语音识别、决策制定和语言翻译。这项技术有可能彻底改变几乎每个领域和行业。',
         },
         {
-            english: 'This is a bad idea.',
-            chinese: '这是一个坏主意。',
+            english:
+                'Traditional Chinese medicine (TCM) has evolved over thousands of years. TCM practitioners use various mind and body practices as well as herbal medicines to treat or prevent health problems. Although some scientific evidence supports the use of some TCM practices and medicines for certain conditions, many practices remain scientifically unproven.',
+            chinese:
+                '中医药已经发展了数千年。中医practitioners使用各种身心疗法和草药来治疗或预防健康问题。虽然一些科学证据支持在某些情况下使用某些中医实践和药物，但许多实践仍然缺乏科学证明。',
         },
         {
-            english: 'I love apples.',
-            chinese: '我喜欢苹果。',
+            english:
+                'The Silk Road was an ancient network of trade routes that connected the East and West, and was central to cultural interaction between the regions for many centuries. The Silk Road not only served as a major transportation route but also facilitated the exchange of art, religion, philosophy, technology, language, science, architecture, and every other element of civilization.',
+            chinese:
+                '丝绸之路是一个古老的贸易路线网络，连接着东西方，数世纪以来一直是各地区文化交流的中心。丝绸之路不仅是主要的运输路线，还促进了艺术、宗教、哲学、技术、语言、科学、建筑以及文明的其他各个要素的交流。',
         },
         {
-            english: 'Bananas are yellow.',
-            chinese: '香蕉是黄色的。',
-        },
-        {
-            english: 'Oranges are sweet.',
-            chinese: '橙子很甜。',
-        },
-        {
-            english: 'I am eating watermelon.',
-            chinese: '我在吃西瓜。',
-        },
-        {
-            english: 'Grapes are delicious.',
-            chinese: '葡萄很好吃。',
+            english:
+                'Quantum computing represents a fundamentally new approach to computation. While traditional computers operate on bits that are either 0 or 1, quantum computers use quantum bits or qubits, which can exist in multiple states simultaneously. This property, known as superposition, along with other quantum phenomena, could allow quantum computers to solve certain problems exponentially faster than classical computers.',
+            chinese:
+                '量子计算代表着一种根本性的新计算方法。传统计算机使用非0即1的比特运算，而量子计算机使用量子比特，可以同时存在于多个状态。这种被称为叠加态的特性，以及其他量子现象，可能使量子计算机以指数级的速度解决某些问题，远快于经典计算机。',
         },
     ]);
 

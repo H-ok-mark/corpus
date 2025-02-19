@@ -8,6 +8,7 @@ import TranslationVue from "@/views/double_corpus/Translation.vue";
 import KwicVue from "@/views/single_corpus/KWIC/KWIC.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
 import Welcomevue from "@/views/Welcome.vue"
+import TestVue from "@/views/double_corpus/test.vue";
 
 
 
@@ -28,6 +29,7 @@ const routes = [
             { path: "/double-corpus/translation", component: TranslationVue },
             { path: "/corpus/list", component: CorpusListVue },
             { path: "/corpus/users", component: UserCorpusVue },
+            { path: "/double-corpus/test", component: TestVue },
 
 
 
