@@ -20,6 +20,7 @@
     import { useRouter } from 'vue-router';
     // import { useTokenStore } from '@/stores/token';
     const router = useRouter();
+
     const handleCommand = command => {
         if (command === 'logout') {
             // TODO: 清除登录状态
@@ -106,9 +107,7 @@
         <el-container>
             <!-- 头部区域 -->
             <el-header>
-                <div>
-                    <strong> e1</strong>
-                </div>
+                <div></div>
                 <!-- 头像区域 -->
                 <el-dropdown placement="bottom-end" @command="handleCommand">
                     <span class="el-dropdown__box">

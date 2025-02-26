@@ -116,24 +116,27 @@
     ]);
     import { kwicService } from '@/api/KWIC';
     // 初始化长度为 10 的数组，默认全为 0
-    let leftPart = new Array(10).fill(0);
-    let rightPart = new Array(10).fill(0);
     const kwicSearch = async () => {
-        // 遍历用户选择的左边数组，将对应索引设置为 1
+        // 每次搜索前重置数组
+        let leftPart = new Array(10).fill(0);
+        let rightPart = new Array(10).fill(0);
+
+        // 遍历用户选择的左边复选框数组，将对应索引设置为 1
         selectedLeftFilters.value.forEach(item => {
-            const index = parseInt(item.toString()) - 1; // 转为数字并计算索引
+            const index = parseInt(item.toString()) - 1;
             if (index >= 0 && index < 10) {
-                leftPart[index] = 1; // 标记为选中
+                leftPart[index] = 1;
             }
         });
 
-        // 遍历用户选择的右边数组，将对应索引设置为 1
+        // 遍历用户选择的右边复选框数组，将对应索引设置为 1
         selectedRightFilters.value.forEach(item => {
-            let index = parseInt(item.toString()) - 1; // 转为数字并计算索引
+            let index = parseInt(item.toString()) - 1;
             if (index >= 0 && index < 10) {
-                rightPart[index] = 1; // 标记为选中
+                rightPart[index] = 1;
             }
         });
+
         const result = await kwicService({
             file: `${corpusStore.appliedCorpusName}`,
             word: searchWord.value,
@@ -142,6 +145,7 @@
             pageNum: pageNum.value,
             pageSize: pageSize.value,
         });
+
         tableData.value = result.data.map(item => {
             return {
                 file: `${corpusStore.appliedCorpusName}`,
@@ -150,8 +154,8 @@
                 rightContext: item.rightContext,
             };
         });
-        console.log(kwicData.value);
-        // total.value = result.total;
+
+        total.value = result.total;
     };
 
     // 处理搜索
@@ -268,12 +272,6 @@
     };
 
     //KWIC分页
-
-    // // 处理分页
-    // const handlePageChange = (page: number) => {
-    //     pageNum.value = page;
-    //     // TODO: 获取对应页的数据
-    // };
 
     //函数调用
     // 处理分页变化
