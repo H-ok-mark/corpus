@@ -130,6 +130,7 @@
                 <el-step title="开始分析" description="使用AI助手进行分析" />
             </el-steps>
         </el-card>
+        <el-footer>©Corpus+ 语料库智能应用平台</el-footer>
     </div>
 </template>
 
@@ -208,5 +209,12 @@
 
     :deep(.el-step__description) {
         font-size: 14px;
+    }
+    .el-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: #666;
     }
 </style>

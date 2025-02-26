@@ -7,8 +7,9 @@ import CorpusListVue from "@/views/corpus/CorpusList.vue";
 import TranslationVue from "@/views/double_corpus/Translation.vue";
 import KwicVue from "@/views/single_corpus/KWIC/KWIC.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
-import Welcomevue from "@/views/Welcome.vue"
+import Welcomevue from "@/views/Welcome.vue";
 import TestVue from "@/views/double_corpus/test.vue";
+
 
 
 
@@ -18,6 +19,7 @@ const routes = [
     { path: "/login", component: LoginVue },
     {
         path: "/login/layout", component: LayoutVue,
+
         //重定向
         redirect: "/welcome",
         // 子路由
