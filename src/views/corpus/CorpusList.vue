@@ -67,7 +67,7 @@
             });
             // 尝试从响应头中获取 filename，若无效则使用默认文件名
             const disposition = response.headers?.['content-disposition'];
-            let filename = 'download.bin';
+            let filename = 'download.txt';
             if (disposition && disposition.indexOf('filename') !== -1) {
                 const match = disposition.match(/filename\*?=([^;]+)/i);
                 if (match && match[1]) {

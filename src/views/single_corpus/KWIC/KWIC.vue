@@ -301,7 +301,11 @@
                     size="large"
                 >
                     <template #append>
-                        <el-button :icon="Search" @click="handleSearch">
+                        <el-button
+                            class="search-button"
+                            :icon="Search"
+                            @click="handleSearch"
+                        >
                             搜索
                         </el-button>
                     </template>
@@ -477,8 +481,7 @@
                         :loading="syntaxLoading"
                         @click="handleStartAnalysis('syntax')"
                         size="large"
-                    >
-                        开始使用
+                        >开始使用
                     </el-button>
                 </div>
                 <div v-else>
@@ -642,22 +645,6 @@
                                             {{ item.text }}
                                         </el-checkbox>
                                     </el-checkbox-group>
-
-                                    <!-- 筛选内容：单选组 -->
-                                    <!-- <el-radio-group
-                                        v-model="kwicData.rightCount"
-                                    >
-                                        <el-radio
-                                            v-for="item in rightFilters"
-                                            :key="item.value"
-                                            :label="item.value"
-                                        >
-                                            {{ item.text }}
-                                        </el-radio>
-                                    </el-radio-group> -->
-                                    <!-- 筛选内容：单选组 -->
-
-                                    <!-- 筛选操作按钮：两端分布 -->
                                     <div
                                         style="display: flex; margin-top: 10px"
                                     >
@@ -678,9 +665,11 @@
                         </template>
                     </el-table-column>
                 </el-table>
+
                 <!-- 分页条 -->
                 <div class="pagination">
                     <el-pagination
+                        v-if="tableData.length > 0"
                         v-model:current-page="pageNum"
                         :page-sizes="[10, 15, 20]"
                         :page-size="pageSize"
@@ -991,5 +980,16 @@
     }
     .vocabUsageDescription {
         padding: 40px;
+    }
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .search-button {
+        border-radius: 4px;
+        font-weight: bold;
+        padding: 6px 16px;
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
     }
 </style>

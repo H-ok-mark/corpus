@@ -29,7 +29,6 @@
     const size = ref<ComponentSize>('default');
 
     const loading = ref(false);
-
     const allwords = ref(true);
     // 搜索词频显示函数
     const wordsList = async () => {
@@ -136,7 +135,7 @@
         </div>
         <!-- 分页条1 -->
         <el-pagination
-            v-if="allwords"
+            v-if="allwords && tableData.length > 0 && tableData[0].word !== ''"
             v-model:current-page="pageNum"
             v-model:page-size="pageSize"
             :page-sizes="[10, 15, 20]"

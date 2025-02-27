@@ -2,6 +2,8 @@
     import { ref } from 'vue';
     import { ElMessage } from 'element-plus';
     import type { UploadUserFile } from 'element-plus';
+    import { Search } from '@element-plus/icons-vue'; // 在导入区添加
+
     import { Loading } from 'element-plus/es/components/loading/src/service';
 
     // 表格数据
@@ -118,12 +120,6 @@
     // 当前选项卡
     const activeTab = ref('import');
 
-    // // 对齐分析的结果数据
-    // const sentenceAlignment = ref<any[]>([]);
-    // const phraseAlignment = ref<any[]>([]);
-    // const contextAnalysis = ref<any[]>([]);
-    // const versionsAnalysis = ref<any[]>([]);
-
     // 对齐分析的结果数据（添加初始数据）
     const sentenceAlignment = ref<any[]>([
         {
@@ -133,8 +129,8 @@
         },
         {
             align_sentence_id: 305,
-            source_text: '本文试将义和团事件置于历史转变进程中考察',
-            target_text: 'This chapter is an examination of the Boxer Incident',
+            source_text: 'This chapter is an examination of the Boxer Incident',
+            target_text: '本文试将义和团事件置于历史转变进程中考察',
         },
     ]);
     const phraseAlignment = ref<any[]>([
@@ -157,16 +153,42 @@
     ]);
     const versionsAnalysis = ref<any[]>([
         {
-            target_corpus_id: 8902,
-            target_text: 'This chapter is an examination...',
-            strategy: '意译',
+            original: '示例原本',
+            source: 'Greeting text',
+            translation: '你好世界',
+            strategy: '直译',
+            version: '译本v1',
         },
         {
-            target_corpus_id: 8903,
-            target_text: 'In this paper, the Boxer Incident...',
-            strategy: '意译',
+            original: '示例原本',
+            source: 'Greeting text',
+            translation: '世界，你好！',
+            strategy: '语气强化',
+            version: '译本v2',
         },
     ]);
+
+    // 添加搜索词变量
+    const searchVersion = ref('');
+
+    // 添加处理搜索的函数
+    const handleVersionSearch = () => {
+        if (!searchVersion.value) {
+            ElMessage.warning('请输入搜索内容');
+            return;
+        }
+
+        // 这里可以调用相应的API进行搜索
+        // 示例实现：
+        loading.value = true;
+        setTimeout(() => {
+            // 模拟搜索结果
+            versionsAnalysis.value = versionsAnalysis.value.filter(item =>
+                item.target_text.includes(searchVersion.value)
+            );
+            loading.value = false;
+        }, 500);
+    };
 </script>
 
 <template>
@@ -306,12 +328,12 @@
                                 />
                                 <el-table-column
                                     prop="source_text"
-                                    label="源句子"
+                                    label="原文"
                                     show-overflow-tooltip
                                 />
                                 <el-table-column
                                     prop="target_text"
-                                    label="目标句子"
+                                    label="译文"
                                     show-overflow-tooltip
                                 />
                             </el-table>
@@ -319,6 +341,7 @@
                         <!-- 分页器 -->
                         <div class="pagination-wrapper">
                             <el-pagination
+                                v-if="sentenceAlignment.length > 0"
                                 v-model:current-page="pageNum"
                                 v-model:page-size="pageSize"
                                 :page-sizes="[10, 15, 20]"
@@ -400,29 +423,58 @@
                     </el-tab-pane>
 
                     <!-- 多译本对比分析 -->
-                    <el-tab-pane label="多译本对比分析" name="versions">
-                        <div v-if="isAlignment" class="result-area">
-                            <el-table :data="versionsAnalysis" border stripe>
+                    <el-tab-pane label="多译本文段对比分析" name="versions">
+                        <!-- 搜索框 -->
+                        <div class="search-area">
+                            <el-input
+                                placeholder="请输入原句"
+                                size="large"
+                                v-model="searchVersion"
+                            >
+                                <template #append>
+                                    <el-button
+                                        class="search-button"
+                                        type="primary"
+                                        @click="handleVersionSearch"
+                                        :icon="Search"
+                                        >搜索</el-button
+                                    >
+                                </template>
+                            </el-input>
+                        </div>
+                        <!--多译本对比分析 -->
+                        <div v-if="isAlignment" class="result">
+                            <el-table
+                                :data="versionsAnalysis"
+                                border
+                                style="width: 100%"
+                                :header-cell-style="{
+                                    backgroundColor: '#ffffff',
+                                    color: '#000000',
+                                    borderColor: '#e0e0e0',
+                                }"
+                            >
+                                <!-- 独立五列结构 -->
                                 <el-table-column
-                                    prop="target_corpus_id"
-                                    label="目标语料库ID"
-                                    width="120"
+                                    prop="original"
+                                    label="原文本"
                                 />
+                                <el-table-column prop="source" label="源语句" />
                                 <el-table-column
-                                    prop="target_text"
-                                    label="译本内容"
-                                    show-overflow-tooltip
+                                    prop="translation"
+                                    label="翻译语句"
                                 />
                                 <el-table-column
                                     prop="strategy"
                                     label="翻译策略"
-                                    width="120"
                                 />
+                                <el-table-column prop="version" label="译本" />
                             </el-table>
                         </div>
                         <!-- 分页器 -->
                         <div class="pagination-wrapper">
                             <el-pagination
+                                v-if="versionsAnalysis.length > 0"
                                 v-model:current-page="pageNum"
                                 v-model:page-size="pageSize"
                                 :page-sizes="[10, 15, 20]"
@@ -536,5 +588,19 @@
         .page-header h2 {
             font-size: 24px;
         }
+    }
+    .result-area {
+        width: 100%;
+        padding: 15px;
+    }
+    .search-area {
+        margin: 30px;
+        display: flex;
+    }
+    .search-button {
+        border-radius: 4px;
+        font-weight: bold;
+        padding: 6px 16px;
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
     }
 </style>

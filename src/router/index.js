@@ -8,7 +8,7 @@ import TranslationVue from "@/views/double_corpus/Translation.vue";
 import KwicVue from "@/views/single_corpus/KWIC/KWIC.vue";
 import WordsVue from "@/views/single_corpus/Words/Words.vue";
 import Welcomevue from "@/views/Welcome.vue";
-import TestVue from "@/views/double_corpus/test.vue";
+import TestVue from "@/views/double_corpus/Test.vue";
 
 
 
