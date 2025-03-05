@@ -40,6 +40,7 @@
                 pageNum: pageNum.value,
                 pageSize: pageSize.value,
             });
+            total.value = result.total;
 
             if (!word.value) {
                 tableData.value = result.data.map(item => ({

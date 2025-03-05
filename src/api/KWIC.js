@@ -19,3 +19,49 @@ export const kwicService = (kwicData) => {
         pageSize: kwicData.pageSize
     })
 }
+// 词汇用法总结
+export const vocabUsageService = (wordParam) => {
+    const keyword = typeof wordParam === 'object' && wordParam !== null
+        ? (wordParam.value || wordParam.word || '')
+        : wordParam;
+
+    console.log('发送的搜索词:', keyword);
+
+    // 创建URLSearchParams对象，用于构建请求参数
+    const params = new URLSearchParams();
+    params.append('keyword', keyword);
+
+    // 发送post请求
+    return request.post('/corpus/mono/syntax', params);
+}
+// 句法结构分析
+export const syntaxPatternsService = (wordParam) => {
+    const keyword = typeof wordParam === 'object' && wordParam !== null
+        ? (wordParam.value || wordParam.word || '')
+        : wordParam;
+
+    console.log('发送的搜索词:', keyword);
+
+    // 创建URLSearchParams对象，用于构建请求参数
+    const params = new URLSearchParams();
+    params.append('keyword', keyword);
+
+    // 发送post请求
+    return request.post('/corpus/mono/sentiment', params);
+}
+//词义分析
+export const semanticAnalysisService = (wordParam) => {
+    const keyword = typeof wordParam === 'object' && wordParam !== null
+        ? (wordParam.value || wordParam.word || '')
+        : wordParam;
+
+    console.log('发送的搜索词:', keyword);
+
+    // 创建URLSearchParams对象，用于构建请求参数
+    const params = new URLSearchParams();
+    params.append('keyword', keyword);
+
+    // 发送post请求
+    return request.post('/corpus/mono/semantic', params);
+}
+

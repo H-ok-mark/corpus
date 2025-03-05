@@ -14,6 +14,13 @@
     } from '@element-plus/icons-vue';
     import { ElMessage } from 'element-plus';
     import { useCorpusStore } from '@/stores/corpusStore';
+    import {
+        kwicService,
+        vocabUsageService,
+        syntaxPatternsService,
+        semanticAnalysisService,
+    } from '@/api/KWIC';
+    import { el } from 'element-plus/dist/locale/zh-cn';
 
     const corpusStore = useCorpusStore();
 
@@ -33,9 +40,18 @@
             definition: '教授(职位)',
         },
     ]);
-
+    const semanticAnalysis = async wordValue => {
+        // 确保返回 Promise 以便调用方可以等待
+        console.log('词义分析请求:', wordValue);
+        const result = await semanticAnalysisService({
+            word: wordValue,
+        });
+        // 更新数据
+        semanticResults.value = result.data;
+        return result; // 返回结果
+    };
     // 句法结构数据
-    const syntaxPatterns = ref([
+    const syntaxPatternsData = ref([
         {
             structure: 'get + 名词',
         },
@@ -43,6 +59,17 @@
             structure: 'get + 形容词',
         },
     ]);
+    const syntaxPatterns = async wordValue => {
+        // 确保返回 Promise 以便调用方可以等待
+        console.log('句法结构分析请求:', wordValue);
+        const result = await syntaxPatternsService({
+            word: wordValue,
+        });
+        // 更新数据
+        syntaxPatternsData.value = result.data;
+        return result; // 返回结果
+    };
+
     // 添加词汇用法数据
     const vocabUsageData = ref([
         {
@@ -82,9 +109,27 @@
             none: 'restructuring',
         },
     ]);
-    const vocabUsageDescription = ref(
+    const vocabUsageDescriptionData = ref(
         '“chair” 作为名词时，常用于指代一种供人坐的家具，通常有靠背和四条腿，可用于家庭、办公室、教室等场景。在会议或委员会环境中，“chair” 还可以指会议主席或主持人，负责组织和引导会议流程。作为动词时，“chair” 表示主持会议或担任主席，强调领导和协调的职责。'
     );
+
+    // 修改 vocabUsageDescription 函数，添加错误处理
+    const vocabUsageDescription = async wordValue => {
+        try {
+            // 确保返回 Promise 以便调用方可以等待
+            console.log('词汇用法分析请求:wordValue:', wordValue);
+            const result = await vocabUsageService({
+                word: wordValue,
+            });
+            // 更新数据
+            vocabUsageDescriptionData.value = result.data;
+            return result; // 返回结果
+        } catch (error) {
+            // 你的 request.js 已经处理了错误提示，这里不需要重复显示错误消息
+            console.error('词汇用法分析请求失败:', error);
+            throw error; // 重新抛出错误，让调用方知道出现了问题
+        }
+    };
 
     // 存储选中的复选框内容
     //----选择第几个词
@@ -114,7 +159,6 @@
             rightContext: null,
         },
     ]);
-    import { kwicService } from '@/api/KWIC';
     // 初始化长度为 10 的数组，默认全为 0
     const kwicSearch = async () => {
         // 每次搜索前重置数组
@@ -234,25 +278,34 @@
 
     // 处理开始分析点击事件
     const handleStartAnalysis = async (type: string) => {
-        switch (type) {
-            case 'semantic':
-                semanticLoading.value = true;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                showSemanticContent.value = true;
-                semanticLoading.value = false;
-                break;
-            case 'vocab':
-                vocabLoading.value = true;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                showVocabContent.value = true;
-                vocabLoading.value = false;
-                break;
-            case 'syntax':
-                syntaxLoading.value = true;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                showSyntaxContent.value = true;
-                syntaxLoading.value = false;
-                break;
+        try {
+            switch (type) {
+                case 'semantic':
+                    semanticLoading.value = true;
+                    await semanticAnalysis(searchWord.value);
+                    showSemanticContent.value = true;
+                    break;
+
+                case 'vocab':
+                    vocabLoading.value = true;
+                    await vocabUsageDescription(searchWord.value);
+                    showVocabContent.value = true;
+                    break;
+
+                case 'syntax':
+                    syntaxLoading.value = true;
+                    await syntaxPatterns(searchWord.value);
+                    showSyntaxContent.value = true;
+                    break;
+            }
+        } catch (error) {
+            console.error(`${type} 分析请求失败:`, error);
+            ElMessage.error(`${type} 分析失败，请稍后再试`);
+        } finally {
+            // 确保无论成功失败，都关闭对应的加载状态
+            if (type === 'semantic') semanticLoading.value = false;
+            if (type === 'vocab') vocabLoading.value = false;
+            if (type === 'syntax') syntaxLoading.value = false;
         }
     };
 
@@ -396,33 +449,8 @@
                 <div v-else>
                     <el-skeleton :loading="vocabLoading" animated :rows="3">
                         <div class="vocabUsageDescription">
-                            {{ vocabUsageDescription }}
+                            {{ vocabUsageDescriptionData }}
                         </div>
-                        <!-- <template #default>
-                            <div class="vocab-usage-table scrollable">
-                                <el-table
-                                    :data="vocabUsageData"
-                                    style="width: 120%"
-                                    :border="true"
-                                    stripe
-                                    height="300"
-                                >
-                                    <el-table-column
-                                        prop="subject"
-                                        label="Subject"
-                                    />
-                                    <el-table-column
-                                        prop="adverbOrModal"
-                                        label="Adverb/Modal"
-                                    />
-                                    <el-table-column
-                                        prop="adjective"
-                                        label="Adjective"
-                                    />
-                                    <el-table-column prop="none" label="None" />
-                                </el-table>
-                            </div>
-                        </template> -->
                     </el-skeleton>
                 </div>
             </el-card>
@@ -470,7 +498,7 @@
                         </h3>
                         <h4>
                             <el-tag type="info" size="large"
-                                >共{{ syntaxPatterns.length }}种结构</el-tag
+                                >共{{ syntaxPatternsData.length }}种结构</el-tag
                             >
                         </h4>
                     </div>
@@ -489,7 +517,9 @@
                         <template #default>
                             <div class="syntax-list">
                                 <div
-                                    v-for="(pattern, index) in syntaxPatterns"
+                                    v-for="(
+                                        pattern, index
+                                    ) in syntaxPatternsData"
                                     :key="index"
                                     class="syntax-item"
                                 >
@@ -806,7 +836,7 @@
 
     /* 句法分析卡片样式 */
     .syntax-card {
-        height: 100%;
+        height: 500px;
     }
     .syntax-card:hover {
         transform: translateY(-4px);
@@ -874,7 +904,7 @@
 
     /* 词汇用法总结卡片样式 */
     .vocab-usage-card {
-        height: 100%;
+        height: 500px;
     }
     .vocab-usage-card:hover {
         transform: translateY(-4px);
