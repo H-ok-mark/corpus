@@ -7,42 +7,14 @@
     import { Loading } from 'element-plus/es/components/loading/src/service';
 
     // 表格数据
-    const tableData = ref([
+    const paragraphData = ref([
         {
-            english:
-                "The Industrial Revolution, which took place from the 18th to 19th centuries, was a period during which predominantly agrarian, rural societies in Europe and America became industrial and urban. Before the Industrial Revolution, manufacturing was often done in people's homes, using hand tools or basic machines.",
-            chinese:
-                '工业革命发生在18世纪至19世纪，在此期间，欧洲和美洲以农业为主的乡村社会转变为工业化和城市化社会。在工业革命之前，制造业通常在人们的家中进行，使用手工工具或基本机器。',
-        },
-        {
-            english:
-                'Climate change is one of the greatest challenges facing humanity today. It affects every country and can have devastating effects on communities, economies and ecosystems. Rising global temperatures have been accompanied by changes in weather and climate, with many places experiencing altered rainfall patterns, more extreme weather events, and rising sea levels.',
-            chinese:
-                '气候变化是当今人类面临的最大挑战之一。它影响着每个国家，可能对社区、经济和生态系统产生毁灭性影响。全球气温上升伴随着天气和气候的变化，许多地方经历着降雨模式的改变、更极端的天气事件和海平面上升。',
-        },
-        {
-            english:
-                'The development of artificial intelligence (AI) represents one of the most significant technological advancements in human history. AI systems can now perform tasks that once required human intelligence, such as visual perception, speech recognition, decision-making, and language translation. This technology has the potential to revolutionize virtually every field and industry.',
-            chinese:
-                '人工智能(AI)的发展代表着人类历史上最重要的技术进步之一。人工智能系统现在可以执行曾经需要人类智能的任务，如视觉感知、语音识别、决策制定和语言翻译。这项技术有可能彻底改变几乎每个领域和行业。',
-        },
-        {
-            english:
-                'Traditional Chinese medicine (TCM) has evolved over thousands of years. TCM practitioners use various mind and body practices as well as herbal medicines to treat or prevent health problems. Although some scientific evidence supports the use of some TCM practices and medicines for certain conditions, many practices remain scientifically unproven.',
-            chinese:
-                '中医药已经发展了数千年。中医practitioners使用各种身心疗法和草药来治疗或预防健康问题。虽然一些科学证据支持在某些情况下使用某些中医实践和药物，但许多实践仍然缺乏科学证明。',
-        },
-        {
-            english:
-                'The Silk Road was an ancient network of trade routes that connected the East and West, and was central to cultural interaction between the regions for many centuries. The Silk Road not only served as a major transportation route but also facilitated the exchange of art, religion, philosophy, technology, language, science, architecture, and every other element of civilization.',
-            chinese:
-                '丝绸之路是一个古老的贸易路线网络，连接着东西方，数世纪以来一直是各地区文化交流的中心。丝绸之路不仅是主要的运输路线，还促进了艺术、宗教、哲学、技术、语言、科学、建筑以及文明的其他各个要素的交流。',
-        },
-        {
-            english:
-                'Quantum computing represents a fundamentally new approach to computation. While traditional computers operate on bits that are either 0 or 1, quantum computers use quantum bits or qubits, which can exist in multiple states simultaneously. This property, known as superposition, along with other quantum phenomena, could allow quantum computers to solve certain problems exponentially faster than classical computers.',
-            chinese:
-                '量子计算代表着一种根本性的新计算方法。传统计算机使用非0即1的比特运算，而量子计算机使用量子比特，可以同时存在于多个状态。这种被称为叠加态的特性，以及其他量子现象，可能使量子计算机以指数级的速度解决某些问题，远快于经典计算机。',
+            id: 22,
+            sourceParagraph:
+                '"\'Black Myth: Wukong\' ... was being played on Wednesday by 2.2 million concurrent players on Steam, a major online gaming platform, a day after its release," Reuters reported on Wednesday.',
+            targetParagraph:
+                '路透社21日报道称：“《黑神话：悟空》……在发布一天后，在Steam游戏平台上的同时在线玩家数已突破220万。”',
+            bicorpus: 3,
         },
     ]);
     // 转圈加载状态
@@ -86,56 +58,6 @@
         // versionsList(); // 当前页码变化时重新发起查询
     };
 
-    // 文件列表状态
-    const singleDocFileList = ref<UploadUserFile[]>([]);
-    const doubleDocFileList = {
-        english: ref<UploadUserFile[]>([]),
-        chinese: ref<UploadUserFile[]>([]),
-    };
-
-    // 上传配置
-    const uploadConfig = {
-        action: 'https://api.example.com/upload',
-        accept: '.doc,.docx,.pdf,.xlsx,.xls',
-        limit: 1,
-    };
-
-    // 文件上传处理函数
-    const handleSingleUploadSuccess = () => {
-        ElMessage.success('单文档上传成功');
-    };
-
-    const handleDoubleUploadSuccess = (type: 'english' | 'chinese') => {
-        ElMessage.success(`${type === 'english' ? '英文' : '中文'}文档上传成功`);
-    };
-
-    const isAlignment = ref(false);
-
-    const setIsAlignment = (value: boolean) => {
-        isAlignment.value = value;
-        sessionStorage.setItem('isAlignment', String(value));
-    };
-    // 从 sessionStorage 中读取 isAlignment 值
-
-    const storedAlignment = sessionStorage.getItem('isAlignment');
-    if (storedAlignment === 'true') {
-        isAlignment.value = true;
-    }
-
-    // 开始对齐处理
-    const handleStartAlignment = async (mode: 'single' | 'double' | 'multiple') => {
-        isAlignment.value = true;
-
-        try {
-            // TODO: 调用对齐API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            ElMessage.success('对齐完成');
-            setIsAlignment(true);
-        } catch (error) {
-            ElMessage.error('对齐失败');
-        }
-    };
-
     // 单/双文档选择状态
     const simple = ref(true);
     const fileRadio = ref('单文档对齐');
@@ -146,14 +68,13 @@
     // 对齐分析的结果数据（添加初始数据）
     const sentenceAlignment = ref<any[]>([
         {
-            align_sentence_id: 1,
-            source_text: 'This is the first source sentence.',
-            target_text: '这是第一条目标句子。',
-        },
-        {
-            align_sentence_id: 305,
-            source_text: 'This chapter is an examination of the Boxer Incident',
-            target_text: '本文试将义和团事件置于历史转变进程中考察',
+            id: 12,
+            sourceText:
+                'An interest in the ancient Chinese literature "Journey to the West" has been aroused among netizens and players.',
+            targetText:
+                '网民和该游戏玩家对中国古代文学《西游记》产生了浓厚的兴趣。',
+            strategyId: 1,
+            bidirectCorpusId: 5,
         },
     ]);
     const phraseAlignment = ref<any[]>([
@@ -192,27 +113,7 @@
     ]);
 
     // 多译本部分
-    // 添加搜索词变量
-    const searchVersion = ref('');
 
-    // 添加处理搜索的函数
-    const handleVersionSearch = () => {
-        if (!searchVersion.value) {
-            ElMessage.warning('请输入搜索内容');
-            return;
-        }
-
-        // 这里可以调用相应的API进行搜索
-        // 示例实现：
-        loading.value = true;
-        setTimeout(() => {
-            // 模拟搜索结果
-            versionsAnalysis.value = versionsAnalysis.value.filter(item =>
-                item.target_text.includes(searchVersion.value)
-            );
-            loading.value = false;
-        }, 500);
-    };
     // 语料选择相关的变量和方法
     const corpusDialogVisible = ref(false);
     const selectedCorpusId = ref<number | null>(null);
@@ -245,6 +146,14 @@
         }>
     >([]);
     const selectedCorpusIds = ref<number[]>([]);
+    // 多译本分析请求参数
+    const contextAnalysisData = ref({
+        pageNum: 1,
+        pageSize: 10,
+        // srcCorpusId: selectedCorpusSrc.value.id,
+        // srcSentence: searchSentence.value,
+        // tgtCorpusId: multipleTranslations.value.map(item => item.id),
+    });
     // 添加取消选择方法
     const clearSelectedCorpus = () => {
         selectedCorpusIds.value = [];
@@ -350,6 +259,180 @@
         }
 
         corpusDialogVisible.value = false;
+    };
+    //对齐分析结果
+    const isAlignment = ref(false);
+
+    const setIsAlignment = (value: boolean) => {
+        isAlignment.value = value;
+        sessionStorage.setItem('isAlignment', String(value));
+    };
+    // 从 sessionStorage 中读取 isAlignment 值
+
+    const storedAlignment = sessionStorage.getItem('isAlignment');
+    if (storedAlignment === 'true') {
+        isAlignment.value = true;
+    }
+
+    import {
+        singleAlignmentService,
+        doubleAlignmentService,
+        alignParagraphService,
+        alignSentenceService,
+        getContextAnalysisService,
+    } from '@/api/translation.js';
+
+    //对齐请求
+    const singleAlignment = async () => {
+        //发送对齐请求
+        console.log('singleAlignment', selectedCorpus.value.id);
+
+        singleAlignmentService(selectedCorpus.value.id);
+        ElMessage.success('对齐请求已发送');
+    };
+    const doubleAlignment = async () => {
+        //发送对齐请求
+        console.log(
+            'doubleAlignment',
+            selectedDoublkeCorpusEN.value.id,
+            selectedDoublkeCorpusCN.value.id
+        );
+        doubleAlignmentService(
+            selectedDoublkeCorpusEN.value.id,
+            selectedDoublkeCorpusCN.value.id
+        );
+    };
+
+    // 段落对齐分析
+    const singleAlignParagraph = async () => {
+        // 发送对齐请求
+        console.log('singleAlignParagraph', selectedCorpus.value.id);
+        let result = await alignParagraphService(
+            selectedCorpus.value.id,
+            selectedCorpus.value.id
+        );
+        // 更新段落对齐分析结果
+        paragraphData.value = result.data;
+    };
+    const doubleAlignParagraph = async () => {
+        // 发送对齐请求
+        console.log(
+            'doubleAlignParagraph',
+            selectedDoublkeCorpusEN.value.id,
+            selectedDoublkeCorpusCN.value.id
+        );
+        let result = await alignParagraphService(
+            selectedDoublkeCorpusEN.value.id,
+            selectedDoublkeCorpusCN.value.id
+        );
+        // 更新段落对齐分析结果
+        paragraphData.value = result.data;
+    };
+
+    //句子对齐
+    const alignSentence = async () => {
+        console.log('此时的simple:', simple.value);
+        console.log('en:', selectedDoublkeCorpusEN.value.id);
+        console.log('cn:', selectedDoublkeCorpusCN.value.id);
+        // 发送对齐请求
+        if (simple) {
+            let result = await alignSentenceService(
+                selectedCorpus.value.id,
+                selectedCorpus.value.id
+            );
+            console.log('simple:', selectedCorpus.value.id);
+            sentenceAlignment.value = result.data;
+        } else {
+            console.log('en:', selectedDoublkeCorpusEN.value.id);
+            console.log('cn:', selectedDoublkeCorpusCN.value.id);
+            let result = await alignSentenceService(
+                selectedDoublkeCorpusEN.value.id,
+                selectedDoublkeCorpusCN.value.id
+            );
+
+            sentenceAlignment.value = result.data;
+        }
+        // 更新句子对齐分析结果
+    };
+
+    // // 多译本对比分析
+    // const getContextAnalysis = async () => {
+    //     // 发送对齐请求
+    //     console.log(
+    //         'getContextAnalysis',
+    //         selectedCorpusSrc.value.id,
+    //         multipleTranslations.value.map(item => item.id)
+    //     );
+    //     let result = await getContextAnalysisService(contextAnalysisData.value);
+    //     // 更新多译本对比分析结果
+    //     versionsAnalysis.value = result.data;
+    // };
+    // 添加搜索词变量
+    const searchSentence = ref('');
+
+    // 添加处理搜索的函数
+    const handleVersionSearch = () => {
+        if (!searchSentence.value) {
+            ElMessage.warning('请输入搜索内容');
+            return;
+        }
+        // getContextAnalysis();
+    };
+    const handleStartAlignment = async (mode: 'single' | 'double' | 'sentence') => {
+        try {
+            //single
+            if (mode === 'single') {
+                if (!selectedCorpus.value) {
+                    ElMessage.warning('请先选择语料库');
+                    return;
+                }
+                loading.value = true;
+                //发送对齐请求
+                await singleAlignment();
+                await singleAlignParagraph();
+                isAlignment.value = true; // 设置为 true 显示结果表格
+            } else if (mode === 'double') {
+                if (
+                    !selectedDoublkeCorpusEN.value ||
+                    !selectedDoublkeCorpusCN.value
+                ) {
+                    ElMessage.warning('请先选择语料库');
+                    return;
+                }
+                loading.value = true;
+                //发送对齐请求
+                await doubleAlignment();
+                await doubleAlignParagraph();
+                isAlignment.value = true; // 设置为 true 显示结果表格
+            } else if (mode === 'sentence') {
+                console.log('sentence');
+                if (simple.value) {
+                    console.log('simple');
+                    if (!selectedCorpus.value) {
+                        ElMessage.warning('请先选择语料库');
+                        return;
+                    }
+                } else {
+                    console.log('double');
+                    if (
+                        !selectedDoublkeCorpusEN.value ||
+                        !selectedDoublkeCorpusCN.value
+                    ) {
+                        ElMessage.warning('请先选择语料库');
+                        return;
+                    }
+                }
+                loading.value = true;
+                //发送对齐请求
+                await alignSentence();
+                isAlignment.value = true; // 设置为 true 显示结果表格
+            }
+        } catch (error) {
+            console.error('对齐处理失败:', error);
+            ElMessage.error('对齐失败，请稍后再试');
+        } finally {
+            loading.value = false; // 无论成功或失败，都关闭加载状态
+        }
     };
 </script>
 
@@ -457,17 +540,17 @@
                                 <!-- 结果表格 -->
                                 <div v-if="isAlignment" class="result">
                                     <el-table
-                                        :data="tableData"
+                                        :data="paragraphData"
                                         stripe
                                         style="width: 100%"
                                         :border="true"
                                     >
                                         <el-table-column
-                                            prop="english"
+                                            prop="sourceParagraph"
                                             label="English"
                                         />
                                         <el-table-column
-                                            prop="chinese"
+                                            prop="targetParagraph"
                                             label="Chinese"
                                         />
                                     </el-table>
@@ -491,50 +574,57 @@
 
                         <!-- 句子对齐分析 -->
                         <el-tab-pane label="句子对齐分析" name="sentence">
-                            <div>
-                                当前选择的语料库：
-                                <span v-if="simple" class="selected-corpus">
-                                    {{
-                                        selectedCorpus
-                                            ? selectedCorpus.name +
-                                              selectedCorpus.id
-                                            : '无'
-                                    }}
-                                </span>
-                                <span v-else class="selected-corpus">
-                                    {{
-                                        selectedDoublkeCorpusEN
-                                            ? selectedDoublkeCorpusEN.name
-                                            : '无'
-                                    }}
-                                    <!-- 空格 -->
-
-                                    {{
-                                        selectedDoublkeCorpusCN
-                                            ? selectedDoublkeCorpusCN.name
-                                            : ''
-                                    }}
-                                </span>
+                            <div class="sentence-header">
+                                <div class="corpus-info">
+                                    当前选择的语料库：
+                                    <span v-if="simple" class="selected-corpus">
+                                        {{
+                                            selectedCorpus
+                                                ? selectedCorpus.name +
+                                                  selectedCorpus.id
+                                                : '无'
+                                        }}
+                                    </span>
+                                    <span v-else class="selected-corpus">
+                                        {{
+                                            selectedDoublkeCorpusEN
+                                                ? selectedDoublkeCorpusEN.name
+                                                : '无'
+                                        }}
+                                        {{
+                                            selectedDoublkeCorpusCN
+                                                ? selectedDoublkeCorpusCN.name
+                                                : ''
+                                        }}
+                                    </span>
+                                </div>
+                                <el-button
+                                    class="sentence-button"
+                                    type="success"
+                                    @click="handleStartAlignment('sentence')"
+                                    >开始对齐</el-button
+                                >
                             </div>
                             <div v-if="isAlignment" class="result-area">
                                 <el-table
                                     v-loading="loading"
                                     :data="sentenceAlignment"
+                                    width="100%"
                                     border
                                     stripe
                                 >
                                     <el-table-column
-                                        prop="align_sentence_id"
+                                        prop="id"
                                         label="记录ID"
                                         width="100"
                                     />
                                     <el-table-column
-                                        prop="source_text"
+                                        prop="sourceText"
                                         label="原文"
                                         show-overflow-tooltip
                                     />
                                     <el-table-column
-                                        prop="target_text"
+                                        prop="targetText"
                                         label="译文"
                                         show-overflow-tooltip
                                     />
@@ -652,7 +742,7 @@
                                 <el-input
                                     placeholder="请输入原句"
                                     size="large"
-                                    v-model="searchVersion"
+                                    v-model="searchSentence"
                                 >
                                     <template #append>
                                         <el-button
@@ -986,5 +1076,20 @@
         font-size: 13px;
         color: #909399;
         justify-content: left;
+    }
+    /* 句子对齐 */
+    .sentence-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .corpus-info {
+        flex: 1;
+    }
+
+    .sentence-button {
+        margin-left: 20px; /* 与左侧内容保持一定距离 */
     }
 </style>

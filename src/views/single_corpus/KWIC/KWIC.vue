@@ -28,18 +28,7 @@
     const searchWord = ref('');
     const hasSearchResult = ref(false);
 
-    // 词义分析数据
-    const semanticResults = ref([
-        {
-            definition: '椅子(家具)',
-        },
-        {
-            definition: '主席(职位)',
-        },
-        {
-            definition: '教授(职位)',
-        },
-    ]);
+    const semanticResults = ref([]);
     const semanticAnalysis = async wordValue => {
         // 确保返回 Promise 以便调用方可以等待
         console.log('词义分析请求:', wordValue);
@@ -47,18 +36,14 @@
             word: wordValue,
         });
         // 更新数据
-        semanticResults.value = result.data;
-        return result; // 返回结果
+        // 将字符串数组转换为对象数组
+        semanticResults.value = result.data.map(item => ({
+            definition: item,
+        }));
+        console.log('词义分析：', semanticResults.value);
     };
     // 句法结构数据
-    const syntaxPatternsData = ref([
-        {
-            structure: 'get + 名词',
-        },
-        {
-            structure: 'get + 形容词',
-        },
-    ]);
+    const syntaxPatternsData = ref([]);
     const syntaxPatterns = async wordValue => {
         // 确保返回 Promise 以便调用方可以等待
         console.log('句法结构分析请求:', wordValue);
@@ -66,8 +51,11 @@
             word: wordValue,
         });
         // 更新数据
-        syntaxPatternsData.value = result.data;
-        return result; // 返回结果
+        // 将字符串数组转换为对象数组
+        syntaxPatternsData.value = result.data.map(item => ({
+            structure: item,
+        }));
+        console.log('句法结构分析', syntaxPatternsData.value);
     };
 
     // 添加词汇用法数据
@@ -113,7 +101,6 @@
         '“chair” 作为名词时，常用于指代一种供人坐的家具，通常有靠背和四条腿，可用于家庭、办公室、教室等场景。在会议或委员会环境中，“chair” 还可以指会议主席或主持人，负责组织和引导会议流程。作为动词时，“chair” 表示主持会议或担任主席，强调领导和协调的职责。'
     );
 
-    // 修改 vocabUsageDescription 函数，添加错误处理
     const vocabUsageDescription = async wordValue => {
         try {
             // 确保返回 Promise 以便调用方可以等待
@@ -123,7 +110,6 @@
             });
             // 更新数据
             vocabUsageDescriptionData.value = result.data;
-            return result; // 返回结果
         } catch (error) {
             // 你的 request.js 已经处理了错误提示，这里不需要重复显示错误消息
             console.error('词汇用法分析请求失败:', error);

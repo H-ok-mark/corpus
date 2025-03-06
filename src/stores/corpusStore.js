@@ -12,6 +12,7 @@ export const useCorpusStore = defineStore('corpus', {
             }
             this.appliedCorpusId = corpus.id;
             this.appliedCorpusName = corpus.name;
+
         },
         clearCurrentCorpus() {
             this.appliedCorpusId = null;
