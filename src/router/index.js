@@ -32,10 +32,6 @@ const routes = [
             { path: "/corpus/list", component: CorpusListVue },
             { path: "/corpus/users", component: UserCorpusVue },
             { path: "/double-corpus/test", component: TestVue },
-
-
-
-
         ]
 
     },

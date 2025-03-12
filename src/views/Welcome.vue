@@ -45,7 +45,7 @@
     // 平台统计数据
     const statistics = ref([
         { value: 1000000, title: '语料总量(词)' },
-        { value: 50, title: '专业领域覆盖' },
+        { value: '中国古典文学、政府工作报告等', title: '专业领域覆盖' },
         { value: 99.9, title: '分析准确率', suffix: '%' },
     ]);
 </script>
@@ -68,6 +68,31 @@
                     <el-button size="large">了解更多</el-button>
                 </div>
             </div>
+        </el-card>
+
+        <!-- 统计数据区 -->
+        <el-card class="statistics-section">
+            <el-row :gutter="20">
+                <el-col :span="8" v-for="stat in statistics" :key="stat.title">
+                    <el-statistic
+                        :value="stat.value"
+                        :title="stat.title"
+                        :suffix="stat.suffix"
+                    />
+                </el-col>
+            </el-row>
+        </el-card>
+
+        <!-- 快速入门指南 -->
+        <el-card class="guide-section">
+            <template #header>
+                <h2>快速入门</h2>
+            </template>
+            <el-steps :active="1" finish-status="success">
+                <el-step title="创建账号" description="注册您的专属账号" />
+                <el-step title="导入语料" description="支持多种格式文件上传" />
+                <el-step title="开始分析" description="使用AI助手进行分析" />
+            </el-steps>
         </el-card>
 
         <!-- 核心功能区 -->
@@ -106,30 +131,6 @@
             </el-row>
         </el-card>
 
-        <!-- 统计数据区 -->
-        <el-card class="statistics-section">
-            <el-row :gutter="20">
-                <el-col :span="8" v-for="stat in statistics" :key="stat.title">
-                    <el-statistic
-                        :value="stat.value"
-                        :title="stat.title"
-                        :suffix="stat.suffix"
-                    />
-                </el-col>
-            </el-row>
-        </el-card>
-
-        <!-- 快速入门指南 -->
-        <el-card class="guide-section">
-            <template #header>
-                <h2>快速入门</h2>
-            </template>
-            <el-steps :active="1" finish-status="success">
-                <el-step title="创建账号" description="注册您的专属账号" />
-                <el-step title="导入语料" description="支持多种格式文件上传" />
-                <el-step title="开始分析" description="使用AI助手进行分析" />
-            </el-steps>
-        </el-card>
         <el-footer>©Corpus+ 语料库智能应用平台</el-footer>
     </div>
 </template>
