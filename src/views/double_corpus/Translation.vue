@@ -146,13 +146,15 @@
         }>
     >([]);
     const selectedCorpusIds = ref<number[]>([]);
+    // 添加搜索词变量
+    const searchSentence = ref('');
     // 多译本分析请求参数
     const contextAnalysisData = ref({
         pageNum: 1,
         pageSize: 10,
-        // srcCorpusId: selectedCorpusSrc.value.id,
-        // srcSentence: searchSentence.value,
-        // tgtCorpusId: multipleTranslations.value.map(item => item.id),
+        srcCorpusId: null, // 使用安全的初始值
+        srcSentence: '', // 使用空字符串作为默认值
+        tgtCorpusId: [], // 使用空数组作为默认值
     });
     // 添加取消选择方法
     const clearSelectedCorpus = () => {
@@ -331,44 +333,101 @@
 
     //句子对齐
     const alignSentence = async () => {
-        console.log('此时的simple:', simple.value);
-        console.log('en:', selectedDoublkeCorpusEN.value.id);
-        console.log('cn:', selectedDoublkeCorpusCN.value.id);
-        // 发送对齐请求
-        if (simple) {
-            let result = await alignSentenceService(
-                selectedCorpus.value.id,
-                selectedCorpus.value.id
-            );
-            console.log('simple:', selectedCorpus.value.id);
-            sentenceAlignment.value = result.data;
-        } else {
-            console.log('en:', selectedDoublkeCorpusEN.value.id);
-            console.log('cn:', selectedDoublkeCorpusCN.value.id);
-            let result = await alignSentenceService(
-                selectedDoublkeCorpusEN.value.id,
-                selectedDoublkeCorpusCN.value.id
-            );
+        try {
+            console.log('此时的simple:', simple.value);
 
-            sentenceAlignment.value = result.data;
+            // 检查单文档对齐情况
+            if (simple.value) {
+                // 检查语料库是否已选择
+                if (!selectedCorpus.value) {
+                    throw new Error('请先选择语料库');
+                }
+
+                let result = await alignSentenceService(
+                    selectedCorpus.value.id,
+                    selectedCorpus.value.id
+                );
+                console.log('simple:', selectedCorpus.value.id);
+                sentenceAlignment.value = result.data;
+            } else {
+                // 检查双语料库是否都已选择
+                if (!selectedDoublkeCorpusEN.value) {
+                    throw new Error('请先选择英文语料库');
+                }
+                if (!selectedDoublkeCorpusCN.value) {
+                    throw new Error('请先选择中文语料库');
+                }
+
+                console.log('en:', selectedDoublkeCorpusEN.value.id);
+                console.log('cn:', selectedDoublkeCorpusCN.value.id);
+                let result = await alignSentenceService(
+                    selectedDoublkeCorpusEN.value.id,
+                    selectedDoublkeCorpusCN.value.id
+                );
+                sentenceAlignment.value = result.data;
+            }
+            return true;
+        } catch (error) {
+            console.error('句子对齐失败:', error);
+            ElMessage.error(error.message || '句子对齐失败，请稍后再试');
+            return false;
         }
-        // 更新句子对齐分析结果
     };
 
-    // // 多译本对比分析
-    // const getContextAnalysis = async () => {
-    //     // 发送对齐请求
-    //     console.log(
-    //         'getContextAnalysis',
-    //         selectedCorpusSrc.value.id,
-    //         multipleTranslations.value.map(item => item.id)
-    //     );
-    //     let result = await getContextAnalysisService(contextAnalysisData.value);
-    //     // 更新多译本对比分析结果
-    //     versionsAnalysis.value = result.data;
-    // };
-    // 添加搜索词变量
-    const searchSentence = ref('');
+    // 多译本对比分析
+    const getContextAnalysis = async () => {
+        try {
+            if (!selectedCorpusSrc.value) {
+                ElMessage.warning('请先选择源语料库');
+                return;
+            }
+
+            if (multipleTranslations.value.length === 0) {
+                ElMessage.warning('请先选择至少一个译本');
+                return;
+            }
+
+            if (!searchSentence.value.trim()) {
+                ElMessage.warning('请输入要查询的原句');
+                return;
+            }
+
+            loading.value = true;
+
+            // 在发送请求前动态更新参数
+            contextAnalysisData.value = {
+                pageNum: versionsPageNum.value,
+                pageSize: versionsPageSize.value,
+                srcCorpusId: selectedCorpusSrc.value.id,
+                srcSentence: searchSentence.value,
+                tgtCorpusId: multipleTranslations.value.map(item => item.id),
+            };
+
+            let result = await getContextAnalysisService(contextAnalysisData.value);
+
+            // 更新多译本对比分析结果
+            if (result.data && Array.isArray(result.data)) {
+                versionsAnalysis.value = result.data.map(item => {
+                    return {
+                        original: selectedCorpusSrc.value.name,
+                        source: item.sourceSentence,
+                        translation: item.targetSentence,
+                        strategy: item.strategy,
+                        version: item.corpusId,
+                    };
+                });
+
+                // 更新总数并显示结果
+                versionsTotal.value = result.total || result.data.length;
+                isAlignment.value = true;
+            }
+        } catch (error) {
+            console.error('多译本分析失败:', error);
+            ElMessage.error('分析失败，请稍后再试');
+        } finally {
+            loading.value = false;
+        }
+    };
 
     // 添加处理搜索的函数
     const handleVersionSearch = () => {
@@ -376,7 +435,8 @@
             ElMessage.warning('请输入搜索内容');
             return;
         }
-        // getContextAnalysis();
+
+        getContextAnalysis();
     };
     const handleStartAlignment = async (mode: 'single' | 'double' | 'sentence') => {
         try {
@@ -396,7 +456,7 @@
                     !selectedDoublkeCorpusEN.value ||
                     !selectedDoublkeCorpusCN.value
                 ) {
-                    ElMessage.warning('请先选择语料库');
+                    ElMessage.warning('请先选择源语料库和目标语料库');
                     return;
                 }
                 loading.value = true;
@@ -405,31 +465,16 @@
                 await doubleAlignParagraph();
                 isAlignment.value = true; // 设置为 true 显示结果表格
             } else if (mode === 'sentence') {
-                console.log('sentence');
-                if (simple.value) {
-                    console.log('simple');
-                    if (!selectedCorpus.value) {
-                        ElMessage.warning('请先选择语料库');
-                        return;
-                    }
-                } else {
-                    console.log('double');
-                    if (
-                        !selectedDoublkeCorpusEN.value ||
-                        !selectedDoublkeCorpusCN.value
-                    ) {
-                        ElMessage.warning('请先选择语料库');
-                        return;
-                    }
-                }
                 loading.value = true;
                 //发送对齐请求
-                await alignSentence();
-                isAlignment.value = true; // 设置为 true 显示结果表格
+                const success = await alignSentence();
+                if (success) {
+                    isAlignment.value = true; // 只在成功时设置
+                }
             }
         } catch (error) {
             console.error('对齐处理失败:', error);
-            ElMessage.error('对齐失败，请稍后再试');
+            ElMessage.error(error.message || '对齐失败，请稍后再试');
         } finally {
             loading.value = false; // 无论成功或失败，都关闭加载状态
         }

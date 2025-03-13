@@ -69,7 +69,9 @@
     });
 
     // 方法定义
+    const uploadRef = ref();
     const showImportDialog = () => {
+        resetForm(); // 先重置表单
         importDialogVisible.value = true;
     };
     const handleDelete = async corpusId => {
@@ -152,6 +154,11 @@
             files: [],
         };
         corpusFormRef.value?.resetFields();
+
+        // 清除上传组件的文件列表
+        if (uploadRef.value) {
+            uploadRef.value.clearFiles();
+        }
     };
     // 上传文件变化时的回调
     const handleFileChange = (file: any, fileList: any) => {
@@ -310,6 +317,7 @@
                 <!-- 文件上传 -->
                 <el-form-item label="上传文件" prop="files">
                     <el-upload
+                        ref="uploadRef"
                         class="upload-demo"
                         drag
                         :auto-upload="false"

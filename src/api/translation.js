@@ -76,18 +76,18 @@ export const alignSentenceService = (srcId, tgtId) => {
     });
 }
 
-// 多译本策略对齐 - 同样修改
-// srcId 和 tgtId 作为URL查询参数发送
-// tgtId是一个数组，因此需要使用URLSearchParams对象
-// pageNum 和 pageSize使用URLSearchParams对象发送
+// 多译本策略对齐
 export const getContextAnalysisService = (contextAnalysisData) => {
+    // 处理数组参数 - 将数组转换为逗号分隔的字符串
+    const tgtCorpusIdString = Array.isArray(contextAnalysisData.tgtCorpusId)
+        ? contextAnalysisData.tgtCorpusId.join(',')
+        : contextAnalysisData.tgtCorpusId;
 
-
-    return request.post("/corpus/analysis/context", {
+    return request.post("/corpus/analysis/context", null, {
         params: {
             srcSentence: contextAnalysisData.srcSentence,
             srcCorpusId: contextAnalysisData.srcCorpusId,
-            tgtCorpusId: contextAnalysisData.tgtCorpusId,
+            tgtCorpusId: tgtCorpusIdString,  // 使用逗号分隔的字符串
             pageNum: contextAnalysisData.pageNum,
             pageSize: contextAnalysisData.pageSize
         }
