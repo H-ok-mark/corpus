@@ -1,62 +1,69 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    // ==================== 导入区 ====================
+    import { ref, onMounted } from 'vue';
     import { ElMessage } from 'element-plus';
     import type { UploadUserFile } from 'element-plus';
-    import { Search } from '@element-plus/icons-vue'; // 在导入区添加
-
+    import { Search } from '@element-plus/icons-vue';
     import { Loading } from 'element-plus/es/components/loading/src/service';
+    import { corpusListService } from '@/api/corpusList.js';
+    import {
+        singleAlignmentService,
+        doubleAlignmentService,
+        alignParagraphService,
+        alignSentenceService,
+        getContextAnalysisService,
+    } from '@/api/translation.js';
+
+    // ==================== 数据定义 ====================
+    /**
+     * 语料库类型定义
+     */
+    interface Corpus {
+        id: number;
+        name: string;
+        description: string;
+    }
 
     // 表格数据
     const paragraphData = ref([
         {
-            id: 22,
+            id: '1',
             sourceParagraph:
-                '"\'Black Myth: Wukong\' ... was being played on Wednesday by 2.2 million concurrent players on Steam, a major online gaming platform, a day after its release," Reuters reported on Wednesday.',
+                ' 示例文本："\'Black Myth: Wukong\' ... was being played on Wednesday by 2.2 million concurrent players on Steam, a major online gaming platform, a day after its release," Reuters reported on Wednesday.',
             targetParagraph:
-                '路透社21日报道称：“《黑神话：悟空》……在发布一天后，在Steam游戏平台上的同时在线玩家数已突破220万。”',
+                '路透社21日报道称："《黑神话：悟空》……在发布一天后，在Steam游戏平台上的同时在线玩家数已突破220万。"',
             bicorpus: 3,
         },
     ]);
-    // 转圈加载状态
+
+    // 加载状态
     const loading = ref(false);
-    // 分页条数据模型
-    const pageNum = ref(1); // 当前页
-    const total = ref(20); // 总条数
-    const pageSize = ref(10); // 每页显示的数据条数
-    // 分页条数据模型
-    // 语料库列表
-    const corpusPageNum = ref(1); // 当前页
-    const corpusTotal = ref(20); // 总条数
-    const corpusPageSize = ref(4); // 每页显示的数据条数
-    const handleCorpusPageChange = newPage => {
-        corpusPageNum.value = newPage;
-        corpusList(); // 当前页码变化时重新发起查询
-    };
-    //段落对齐分析
-    const paragraphPageNum = ref(1); // 当前页
-    const paragraphTotal = ref(20); // 总条数
-    const paragraphPageSize = ref(10); // 每页显示的数据条数
-    const handleParagraphPageChange = newPage => {
-        paragraphPageNum.value = newPage;
-        // paragraphList(); // 当前页码变化时重新发起查询
-    };
-    // 句子对齐分析，
-    const sentencePageNum = ref(1); // 当前页
-    const sentenceTotal = ref(20); // 总条数
-    const sentencePageSize = ref(10); // 每页显示的数据条数
-    const handleSentencePageChange = newPage => {
-        sentencePageNum.value = newPage;
-        // sentenceList(); // 当前页码变化时重新发起查询
-    };
-    // 多译本文段对比分析
-    // 添加多选时的ID数组
-    const versionsPageNum = ref(1); // 当前页
-    const versionsTotal = ref(20); // 总条数
-    const versionsPageSize = ref(10); // 每页显示的数据条数
-    const handleVersionsPageChange = newPage => {
-        versionsPageNum.value = newPage;
-        // versionsList(); // 当前页码变化时重新发起查询
-    };
+
+    // ========== 分页数据 ==========
+    // 全局分页（已废弃，保留以兼容）
+    const pageNum = ref(1);
+    const total = ref(20);
+    const pageSize = ref(10);
+
+    // 语料库列表分页
+    const corpusPageNum = ref(1);
+    const corpusTotal = ref(20);
+    const corpusPageSize = ref(4);
+
+    // 段落对齐分析分页
+    const paragraphPageNum = ref(1);
+    const paragraphTotal = ref(20);
+    const paragraphPageSize = ref(10);
+
+    // 句子对齐分析分页
+    const sentencePageNum = ref(1);
+    const sentenceTotal = ref(20);
+    const sentencePageSize = ref(10);
+
+    // 多译本文段对比分析分页
+    const versionsPageNum = ref(1);
+    const versionsTotal = ref(20);
+    const versionsPageSize = ref(10);
 
     // 单/双文档选择状态
     const simple = ref(true);
@@ -65,18 +72,21 @@
     // 当前选项卡
     const activeTab = ref('import');
 
-    // 对齐分析的结果数据（添加初始数据）
+    // ========== 对齐分析结果数据 ==========
+    // 句子对齐数据
     const sentenceAlignment = ref<any[]>([
         {
             id: 12,
             sourceText:
-                'An interest in the ancient Chinese literature "Journey to the West" has been aroused among netizens and players.',
+                '示例文本： An interest in the ancient Chinese literature "Journey to the West" has been aroused among netizens and players.',
             targetText:
-                '网民和该游戏玩家对中国古代文学《西游记》产生了浓厚的兴趣。',
+                '示例文本：网民和该游戏玩家对中国古代文学《西游记》产生了浓厚的兴趣。',
             strategyId: 1,
             bidirectCorpusId: 5,
         },
     ]);
+
+    // 词汇对齐数据
     const phraseAlignment = ref<any[]>([
         {
             align_phrase_id: 150,
@@ -91,10 +101,8 @@
             strategy: '直译',
         },
     ]);
-    const contextAnalysis = ref<any[]>([
-        { target_word: 'grass', context: '绿草如茵的草坪', strategy: '直译' },
-        { target_word: 'thatch', context: '茅草屋顶的建筑', strategy: '意译' },
-    ]);
+
+    // 多译本分析数据
     const versionsAnalysis = ref<any[]>([
         {
             original: '示例原本',
@@ -112,85 +120,283 @@
         },
     ]);
 
-    // 多译本部分
-
-    // 语料选择相关的变量和方法
+    // ========== 语料选择相关 ==========
     const corpusDialogVisible = ref(false);
     const selectedCorpusId = ref<number | null>(null);
-    const selectedCorpus = ref<{
-        id: number;
-        name: string;
-        description: string;
-    } | null>(null);
-    const selectedDoublkeCorpusCN = ref<{
-        id: number;
-        name: string;
-        description: string;
-    } | null>(null);
-    const selectedDoublkeCorpusEN = ref<{
-        id: number;
-        name: string;
-        description: string;
-    } | null>(null);
-    const selectedCorpusSrc = ref<{
-        id: number;
-        name: string;
-        description: string;
-    } | null>(null);
-    // 存储多译本选择结果
-    const multipleTranslations = ref<
-        Array<{
-            id: number;
-            name: string;
-            description: string;
-        }>
-    >([]);
+    const selectedCorpus = ref<Corpus | null>(null);
+    const selectedDoublkeCorpusCN = ref<Corpus | null>(null);
+    const selectedDoublkeCorpusEN = ref<Corpus | null>(null);
+    const selectedCorpusSrc = ref<Corpus | null>(null);
+
+    // 多译本相关
+    const multipleTranslations = ref<Corpus[]>([]);
     const selectedCorpusIds = ref<number[]>([]);
-    // 添加搜索词变量
     const searchSentence = ref('');
-    // 多译本分析请求参数
     const contextAnalysisData = ref({
         pageNum: 1,
         pageSize: 10,
-        srcCorpusId: null, // 使用安全的初始值
-        srcSentence: '', // 使用空字符串作为默认值
-        tgtCorpusId: [], // 使用空数组作为默认值
+        srcCorpusId: null as number | null,
+        srcSentence: '',
+        tgtCorpusId: [] as number[],
     });
-    // 添加取消选择方法
+
+    // 语料库列表数据
+    const corpusListData = ref<
+        { id: number | null; name: string | null; description: string | null }[]
+    >([{ id: null, name: null, description: null }]);
+
+    // 当前选择的语料库类型
+    const currentCorpusType = ref<'single' | 'en' | 'cn' | 'src' | 'multiple'>(
+        'single'
+    );
+
+    // 对齐分析结果状态
+    const isAlignment = ref(false);
+
+    // ==================== 方法定义 ====================
+    /**
+     * 清空选择的语料库
+     */
     const clearSelectedCorpus = () => {
         selectedCorpusIds.value = [];
     };
-    // 语料库列表数据
-    import { corpusListService } from '@/api/corpusList.js';
-    // 示例语料列表 - 在实际应用中应从API获取
-    const corpusListData = ref([{ id: null, name: null, description: null }]);
-    //获取语料库列表
-    const corpusList = async () => {
-        let result = await corpusListService({
-            pageNum: corpusPageNum.value,
-            pageSize: corpusPageSize.value,
-            keyword: null,
-            isUser: true,
-        });
 
-        // 将筛选后的数据存入 corpusListData
-        corpusListData.value = result.data.map(item => {
-            return {
+    /**
+     * 获取语料库列表
+     */
+    const corpusList = async () => {
+        try {
+            loading.value = true;
+            const result = await corpusListService({
+                pageNum: corpusPageNum.value,
+                pageSize: corpusPageSize.value,
+                keyword: null,
+                isUser: true,
+            });
+
+            // 将筛选后的数据存入 corpusListData
+            corpusListData.value = result.data.map(item => ({
                 id: item.id,
                 name: item.name,
                 description: item.description,
-            };
-        });
-        corpusTotal.value = result.total;
-        console.log('语料库个数：' + corpusTotal.value);
-    };
-    corpusList();
+            }));
 
-    // 添加当前正在选择的语料库类型标识
-    const currentCorpusType = ref('single'); // 'single', 'en', 'cn'
-    // 显示语料选择对话框
-    const showCorpusDialog = type => {
-        currentCorpusType.value = type; // 设置当前正在选择的语料库类型
+            corpusTotal.value = result.total;
+            console.log('语料库个数：' + corpusTotal.value);
+        } catch (error) {
+            console.error('获取语料库列表失败:', error);
+            ElMessage.error('获取语料库列表失败');
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    /**
+     * 处理语料库分页变化
+     */
+    const handleCorpusPageChange = (newPage: number) => {
+        corpusPageNum.value = newPage;
+        corpusList(); // 当前页码变化时重新发起查询
+    };
+
+    /**
+     * 处理段落分页变化
+     */
+    const handleParagraphPageChange = async (newPage: number) => {
+        try {
+            paragraphPageNum.value = newPage;
+            loading.value = true;
+
+            if (simple.value) {
+                if (!selectedCorpus.value?.id) {
+                    ElMessage.warning('请先选择语料库');
+                    return;
+                }
+                console.log(
+                    selectedCorpus.value.id,
+                    newPage,
+                    paragraphPageSize.value
+                );
+
+                const result = await alignParagraphService(
+                    selectedCorpus.value.id,
+                    selectedCorpus.value.id,
+                    newPage,
+                    paragraphPageSize.value
+                );
+
+                paragraphData.value = result.data;
+                paragraphTotal.value = result.total || result.data.length;
+            } else {
+                if (
+                    !selectedDoublkeCorpusEN.value?.id ||
+                    !selectedDoublkeCorpusCN.value?.id
+                ) {
+                    ElMessage.warning('请先选择英文和中文语料库');
+                    return;
+                }
+                console.log(
+                    selectedDoublkeCorpusEN.value.id,
+                    selectedDoublkeCorpusCN.value.id,
+                    newPage,
+                    paragraphPageSize.value
+                );
+
+                const result = await alignParagraphService(
+                    selectedDoublkeCorpusEN.value.id,
+                    selectedDoublkeCorpusCN.value.id,
+                    newPage,
+                    paragraphPageSize.value
+                );
+
+                paragraphData.value = result.data;
+                paragraphTotal.value = result.total || result.data.length;
+            }
+        } catch (error) {
+            console.error('获取段落数据失败:', error);
+            ElMessage.error('获取段落数据失败，请稍后再试');
+        } finally {
+            loading.value = false;
+        }
+    };
+    /**
+     * 处理段落分页大小变化
+     */
+    const handleParagraphSizeChange = (newSize: number) => {
+        paragraphPageSize.value = newSize;
+        paragraphPageNum.value = 1; // 重置为第一页
+        handleParagraphPageChange(1);
+    };
+
+    /**
+     * 处理句子分页变化
+     */
+    const handleSentencePageChange = async (newPage: number) => {
+        try {
+            sentencePageNum.value = newPage;
+            loading.value = true;
+
+            if (simple.value) {
+                if (!selectedCorpus.value?.id) {
+                    ElMessage.warning('请先选择语料库');
+                    return;
+                }
+
+                const result = await alignSentenceService(
+                    selectedCorpus.value.id,
+                    selectedCorpus.value.id,
+                    newPage,
+                    sentencePageSize.value
+                );
+
+                sentenceAlignment.value = result.data;
+                sentenceTotal.value = result.total || result.data.length;
+            } else {
+                if (
+                    !selectedDoublkeCorpusEN.value?.id ||
+                    !selectedDoublkeCorpusCN.value?.id
+                ) {
+                    ElMessage.warning('请先选择英文和中文语料库');
+                    return;
+                }
+
+                const result = await alignSentenceService(
+                    selectedDoublkeCorpusEN.value.id,
+                    selectedDoublkeCorpusCN.value.id,
+                    newPage,
+                    sentencePageSize.value
+                );
+
+                sentenceAlignment.value = result.data;
+                sentenceTotal.value = result.total || result.data.length;
+            }
+        } catch (error) {
+            console.error('获取句子数据失败:', error);
+            ElMessage.error('获取句子数据失败，请稍后再试');
+        } finally {
+            loading.value = false;
+        }
+    };
+    /**
+     * 处理句子分页大小变化
+     */
+    const handleSentenceSizeChange = (newSize: number) => {
+        sentencePageSize.value = newSize;
+        sentencePageNum.value = 1; // 重置为第一页
+        handleSentencePageChange(1);
+    };
+
+    /**
+     * 处理多译本分页变化
+     */
+    const handleVersionsPageChange = async (newPage: number) => {
+        try {
+            versionsPageNum.value = newPage;
+
+            // 参数验证
+            if (
+                !selectedCorpusSrc.value?.id ||
+                multipleTranslations.value.length === 0 ||
+                !searchSentence.value.trim()
+            ) {
+                return;
+            }
+
+            loading.value = true;
+
+            // 构建请求参数
+            const requestParams = {
+                pageNum: newPage,
+                pageSize: versionsPageSize.value,
+                srcCorpusId: selectedCorpusSrc.value.id,
+                srcSentence: searchSentence.value,
+                tgtCorpusId: multipleTranslations.value.map(item => item.id),
+            };
+
+            const result = await getContextAnalysisService(requestParams);
+
+            if (result.data && Array.isArray(result.data)) {
+                versionsAnalysis.value = result.data.map(item => ({
+                    original: selectedCorpusSrc.value?.name || '',
+                    source: item.sourceSentence,
+                    translation: item.targetSentence,
+                    strategy: item.strategy,
+                    version: item.corpusId,
+                }));
+
+                versionsTotal.value = result.total || result.data.length;
+            }
+        } catch (error) {
+            console.error('获取多译本数据失败:', error);
+            ElMessage.error('获取多译本数据失败，请稍后再试');
+        } finally {
+            loading.value = false;
+        }
+    };
+    /**
+     * 处理多译本分页大小变化
+     */
+    const handleVersionsSizeChange = (newSize: number) => {
+        versionsPageSize.value = newSize;
+        versionsPageNum.value = 1; // 重置为第一页
+        handleVersionsPageChange(1);
+    };
+
+    /**
+     * 设置对齐分析结果状态
+     */
+    const setIsAlignment = (value: boolean) => {
+        isAlignment.value = value;
+        sessionStorage.setItem('isAlignment', String(value));
+    };
+
+    /**
+     * 显示语料选择对话框
+     */
+    const showCorpusDialog = (
+        type: 'single' | 'en' | 'cn' | 'src' | 'multiple'
+    ) => {
+        currentCorpusType.value = type;
         corpusDialogVisible.value = true;
 
         if (type === 'multiple') {
@@ -213,7 +419,9 @@
         }
     };
 
-    // 确认语料选择
+    /**
+     * 确认语料选择
+     */
     const confirmCorpusSelection = () => {
         if (currentCorpusType.value === 'multiple') {
             // 多选情况
@@ -224,12 +432,11 @@
 
             // 获取选中的所有译本信息
             const selectedItems = corpusListData.value.filter(item =>
-                selectedCorpusIds.value.includes(item.id)
-            );
+                selectedCorpusIds.value.includes(item.id as number)
+            ) as Corpus[];
 
             // 更新多译本结果
             multipleTranslations.value = selectedItems;
-
             ElMessage.success(`已选择 ${selectedItems.length} 个译本`);
         } else {
             // 单选情况
@@ -240,7 +447,7 @@
 
             const selected = corpusListData.value.find(
                 item => item.id === selectedCorpusId.value
-            );
+            ) as Corpus;
 
             if (selected) {
                 if (currentCorpusType.value === 'single') {
@@ -253,7 +460,6 @@
                     selectedDoublkeCorpusCN.value = selected;
                     ElMessage.success(`已选择中文语料库: ${selected.name}`);
                 } else if (currentCorpusType.value === 'src') {
-                    // 处理源语料选择
                     selectedCorpusSrc.value = selected;
                     ElMessage.success(`已选择源语料库: ${selected.name}`);
                 }
@@ -262,95 +468,94 @@
 
         corpusDialogVisible.value = false;
     };
-    //对齐分析结果
-    const isAlignment = ref(false);
 
-    const setIsAlignment = (value: boolean) => {
-        isAlignment.value = value;
-        sessionStorage.setItem('isAlignment', String(value));
-    };
-    // 从 sessionStorage 中读取 isAlignment 值
-
-    const storedAlignment = sessionStorage.getItem('isAlignment');
-    if (storedAlignment === 'true') {
-        isAlignment.value = true;
-    }
-
-    import {
-        singleAlignmentService,
-        doubleAlignmentService,
-        alignParagraphService,
-        alignSentenceService,
-        getContextAnalysisService,
-    } from '@/api/translation.js';
-
-    //对齐请求
+    /**
+     * 单文档对齐
+     */
     const singleAlignment = async () => {
-        //发送对齐请求
-        console.log('singleAlignment', selectedCorpus.value.id);
+        if (!selectedCorpus.value?.id) {
+            throw new Error('请先选择语料库');
+        }
 
-        singleAlignmentService(selectedCorpus.value.id);
+        await singleAlignmentService(selectedCorpus.value.id);
         ElMessage.success('对齐请求已发送');
     };
+
+    /**
+     * 双文档对齐
+     */
     const doubleAlignment = async () => {
-        //发送对齐请求
-        console.log(
-            'doubleAlignment',
+        if (
+            !selectedDoublkeCorpusEN.value?.id ||
+            !selectedDoublkeCorpusCN.value?.id
+        ) {
+            throw new Error('请选择英文和中文语料库');
+        }
+
+        await doubleAlignmentService(
             selectedDoublkeCorpusEN.value.id,
             selectedDoublkeCorpusCN.value.id
         );
-        doubleAlignmentService(
-            selectedDoublkeCorpusEN.value.id,
-            selectedDoublkeCorpusCN.value.id
-        );
+        ElMessage.success('对齐请求已发送');
     };
 
-    // 段落对齐分析
+    /**
+     * 单文档段落对齐分析
+     */
     const singleAlignParagraph = async () => {
-        // 发送对齐请求
-        console.log('singleAlignParagraph', selectedCorpus.value.id);
-        let result = await alignParagraphService(
+        if (!selectedCorpus.value?.id) {
+            throw new Error('请先选择语料库');
+        }
+
+        const result = await alignParagraphService(
             selectedCorpus.value.id,
             selectedCorpus.value.id
         );
-        // 更新段落对齐分析结果
+
         paragraphData.value = result.data;
-    };
-    const doubleAlignParagraph = async () => {
-        // 发送对齐请求
-        console.log(
-            'doubleAlignParagraph',
-            selectedDoublkeCorpusEN.value.id,
-            selectedDoublkeCorpusCN.value.id
-        );
-        let result = await alignParagraphService(
-            selectedDoublkeCorpusEN.value.id,
-            selectedDoublkeCorpusCN.value.id
-        );
-        // 更新段落对齐分析结果
-        paragraphData.value = result.data;
+        paragraphTotal.value = result.total || result.data.length;
     };
 
-    //句子对齐
+    /**
+     * 双文档段落对齐分析
+     */
+    const doubleAlignParagraph = async () => {
+        if (
+            !selectedDoublkeCorpusEN.value?.id ||
+            !selectedDoublkeCorpusCN.value?.id
+        ) {
+            throw new Error('请选择英文和中文语料库');
+        }
+
+        const result = await alignParagraphService(
+            selectedDoublkeCorpusEN.value.id,
+            selectedDoublkeCorpusCN.value.id
+        );
+
+        paragraphData.value = result.data;
+        paragraphTotal.value = result.total || result.data.length;
+    };
+
+    /**
+     * 句子对齐
+     */
     const alignSentence = async () => {
         try {
             console.log('此时的simple:', simple.value);
 
-            // 检查单文档对齐情况
             if (simple.value) {
-                // 检查语料库是否已选择
                 if (!selectedCorpus.value) {
                     throw new Error('请先选择语料库');
                 }
 
-                let result = await alignSentenceService(
+                const result = await alignSentenceService(
                     selectedCorpus.value.id,
                     selectedCorpus.value.id
                 );
-                console.log('simple:', selectedCorpus.value.id);
+
                 sentenceAlignment.value = result.data;
+                sentenceTotal.value = result.total || result.data.length;
             } else {
-                // 检查双语料库是否都已选择
                 if (!selectedDoublkeCorpusEN.value) {
                     throw new Error('请先选择英文语料库');
                 }
@@ -358,13 +563,13 @@
                     throw new Error('请先选择中文语料库');
                 }
 
-                console.log('en:', selectedDoublkeCorpusEN.value.id);
-                console.log('cn:', selectedDoublkeCorpusCN.value.id);
-                let result = await alignSentenceService(
+                const result = await alignSentenceService(
                     selectedDoublkeCorpusEN.value.id,
                     selectedDoublkeCorpusCN.value.id
                 );
+
                 sentenceAlignment.value = result.data;
+                sentenceTotal.value = result.total || result.data.length;
             }
             return true;
         } catch (error) {
@@ -374,7 +579,12 @@
         }
     };
 
-    // 多译本对比分析
+    /**
+     * 多译本对比分析
+     */
+
+    //  An open and inclusive attitude is in the genes of the Chinese nation.
+
     const getContextAnalysis = async () => {
         try {
             if (!selectedCorpusSrc.value) {
@@ -394,7 +604,7 @@
 
             loading.value = true;
 
-            // 在发送请求前动态更新参数
+            // 构建请求参数
             contextAnalysisData.value = {
                 pageNum: versionsPageNum.value,
                 pageSize: versionsPageSize.value,
@@ -403,21 +613,20 @@
                 tgtCorpusId: multipleTranslations.value.map(item => item.id),
             };
 
-            let result = await getContextAnalysisService(contextAnalysisData.value);
+            const result = await getContextAnalysisService(
+                contextAnalysisData.value
+            );
 
-            // 更新多译本对比分析结果
+            // 处理返回数据
             if (result.data && Array.isArray(result.data)) {
-                versionsAnalysis.value = result.data.map(item => {
-                    return {
-                        original: selectedCorpusSrc.value.name,
-                        source: item.sourceSentence,
-                        translation: item.targetSentence,
-                        strategy: item.strategy,
-                        version: item.corpusId,
-                    };
-                });
+                versionsAnalysis.value = result.data.map(item => ({
+                    original: selectedCorpusSrc.value?.name || '',
+                    source: item.sourceSentence,
+                    translation: item.targetSentence,
+                    strategy: item.strategy,
+                    version: item.corpusId,
+                }));
 
-                // 更新总数并显示结果
                 versionsTotal.value = result.total || result.data.length;
                 isAlignment.value = true;
             }
@@ -429,7 +638,9 @@
         }
     };
 
-    // 添加处理搜索的函数
+    /**
+     * 处理版本搜索
+     */
     const handleVersionSearch = () => {
         if (!searchSentence.value) {
             ElMessage.warning('请输入搜索内容');
@@ -438,19 +649,18 @@
 
         getContextAnalysis();
     };
+
+    /**
+     * 开始对齐分析
+     */
     const handleStartAlignment = async (mode: 'single' | 'double' | 'sentence') => {
         try {
-            //single
+            // 验证参数
             if (mode === 'single') {
                 if (!selectedCorpus.value) {
                     ElMessage.warning('请先选择语料库');
                     return;
                 }
-                loading.value = true;
-                //发送对齐请求
-                await singleAlignment();
-                await singleAlignParagraph();
-                isAlignment.value = true; // 设置为 true 显示结果表格
             } else if (mode === 'double') {
                 if (
                     !selectedDoublkeCorpusEN.value ||
@@ -459,26 +669,48 @@
                     ElMessage.warning('请先选择源语料库和目标语料库');
                     return;
                 }
-                loading.value = true;
-                //发送对齐请求
-                await doubleAlignment();
-                await doubleAlignParagraph();
-                isAlignment.value = true; // 设置为 true 显示结果表格
-            } else if (mode === 'sentence') {
-                loading.value = true;
-                //发送对齐请求
-                const success = await alignSentence();
-                if (success) {
-                    isAlignment.value = true; // 只在成功时设置
-                }
             }
-        } catch (error) {
-            console.error('对齐处理失败:', error);
-            ElMessage.error(error.message || '对齐失败，请稍后再试');
+
+            // 设置加载状态
+            loading.value = true;
+
+            // 执行对齐操作
+            try {
+                if (mode === 'single') {
+                    await singleAlignment();
+                    await singleAlignParagraph();
+                } else if (mode === 'double') {
+                    await doubleAlignment();
+                    await doubleAlignParagraph();
+                } else if (mode === 'sentence') {
+                    const success = await alignSentence();
+                    if (!success) return;
+                }
+
+                // 设置对齐状态
+                isAlignment.value = true;
+
+                // 成功提示
+                ElMessage.success('对齐完成');
+            } catch (error) {
+                console.error('对齐处理失败:', error);
+                ElMessage.error(error.message || '对齐失败，请稍后再试');
+            }
         } finally {
-            loading.value = false; // 无论成功或失败，都关闭加载状态
+            // 无论成功失败，都关闭加载状态
+            loading.value = false;
         }
     };
+
+    // ==================== 初始化 ====================
+    // 从 sessionStorage 中读取 isAlignment 值
+    const storedAlignment = sessionStorage.getItem('isAlignment');
+    if (storedAlignment === 'true') {
+        isAlignment.value = true;
+    }
+
+    // 页面加载时获取语料库列表
+    corpusList();
 </script>
 
 <template>
@@ -523,6 +755,7 @@
                                     <el-button
                                         type="success"
                                         @click="handleStartAlignment('single')"
+                                        :loading="loading"
                                         >开始对齐</el-button
                                     >
                                 </div>
@@ -552,6 +785,7 @@
                                 <el-button
                                     type="success"
                                     @click="handleStartAlignment('double')"
+                                    :loading="loading"
                                     >开始对齐</el-button
                                 >
                             </div>
@@ -589,6 +823,7 @@
                                         stripe
                                         style="width: 100%"
                                         :border="true"
+                                        v-loading="loading"
                                     >
                                         <el-table-column
                                             prop="sourceParagraph"
@@ -607,11 +842,12 @@
                                         v-model:page-size="paragraphPageSize"
                                         :page-sizes="[10, 15, 20]"
                                         layout="sizes, jumper, total, prev, pager, next"
-                                        :total="total"
+                                        :total="paragraphTotal"
                                         background
-                                        @current-page="
+                                        @current-change="
                                             handleParagraphPageChange
                                         "
+                                        @size-change="handleParagraphSizeChange"
                                     />
                                 </div>
                             </div>
@@ -647,6 +883,7 @@
                                     class="sentence-button"
                                     type="success"
                                     @click="handleStartAlignment('sentence')"
+                                    :loading="loading"
                                     >开始对齐</el-button
                                 >
                             </div>
@@ -683,82 +920,13 @@
                                     v-model:page-size="sentencePageSize"
                                     :page-sizes="[10, 15, 20]"
                                     layout="sizes, jumper, total, prev, pager, next"
-                                    :total="total"
+                                    :total="sentenceTotal"
                                     background
                                     @current-change="handleSentencePageChange"
+                                    @size-change="handleSentenceSizeChange"
                                 />
                             </div>
                         </el-tab-pane>
-
-                        <!-- 词汇对齐分析 -->
-                        <!-- <el-tab-pane label="词汇对齐分析" name="phrase">
-                        <div v-if="isAlignment" class="result-area">
-                            <el-table :data="phraseAlignment" border stripe>
-                                <el-table-column
-                                    prop="align_phrase_id"
-                                    label="记录ID"
-                                    width="100"
-                                />
-                                <el-table-column
-                                    prop="source_word"
-                                    label="源词"
-                                />
-                                <el-table-column
-                                    prop="target_word"
-                                    label="目标词"
-                                />
-                                <el-table-column
-                                    prop="strategy"
-                                    label="翻译策略"
-                                    width="120"
-                                />
-                            </el-table>
-                        </div> -->
-                        <!-- 分页器 -->
-                        <!-- <div class="pagination-wrapper">
-                            <el-pagination
-                                v-model:current-page="pageNum"
-                                v-model:page-size="pageSize"
-                                :page-sizes="[10, 15, 20]"
-                                layout="sizes, jumper, total, prev, pager, next"
-                                :total="total"
-                                background
-                            />
-                        </div>
-                    </el-tab-pane> -->
-
-                        <!-- 多语境翻译分析 -->
-                        <!-- <el-tab-pane label="多语境翻译分析" name="context">
-                        <div v-if="isAlignment" class="result-area">
-                            <el-table :data="contextAnalysis" border stripe>
-                                <el-table-column
-                                    prop="target_word"
-                                    label="翻译结果"
-                                />
-                                <el-table-column
-                                    prop="context"
-                                    label="上下文"
-                                    show-overflow-tooltip
-                                />
-                                <el-table-column
-                                    prop="strategy"
-                                    label="翻译策略"
-                                    width="120"
-                                />
-                            </el-table>
-                        </div> -->
-                        <!-- 分页器 -->
-                        <!-- <div class="pagination-wrapper">
-                            <el-pagination
-                                v-model:current-page="pageNum"
-                                v-model:page-size="pageSize"
-                                :page-sizes="[10, 15, 20]"
-                                layout="sizes, jumper, total, prev, pager, next"
-                                :total="total"
-                                background
-                            />
-                        </div>
-                    </el-tab-pane> -->
 
                         <!-- 多译本对比分析 -->
                         <el-tab-pane label="多译本文段对比分析" name="versions">
@@ -836,6 +1004,7 @@
                                         color: '#000000',
                                         borderColor: '#e0e0e0',
                                     }"
+                                    v-loading="loading"
                                 >
                                     <!-- 独立五列结构 -->
                                     <el-table-column
@@ -868,8 +1037,10 @@
                                     v-model:page-size="versionsPageSize"
                                     :page-sizes="[10, 15, 20]"
                                     layout="sizes, jumper, total, prev, pager, next"
-                                    :total="total"
+                                    :total="versionsTotal"
                                     background
+                                    @current-change="handleVersionsPageChange"
+                                    @size-change="handleSentenceSizeChange"
                                 />
                             </div>
                         </el-tab-pane>

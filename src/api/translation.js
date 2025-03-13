@@ -47,7 +47,7 @@ export const doubleAlignmentService = (srcId, tgtId) => {
     });
 }
 // 段落对齐结果查询 - 修改为使用URL参数
-export const alignParagraphService = (srcId, tgtId) => {
+export const alignParagraphService = (srcId, tgtId, page, size) => {
     // 处理可能存在的值引用
     const srcIdValue = srcId?.value !== undefined ? srcId.value : srcId;
     const tgtIdValue = tgtId?.value !== undefined ? tgtId.value : tgtId;
@@ -57,12 +57,14 @@ export const alignParagraphService = (srcId, tgtId) => {
         params: {
             srcId: srcIdValue,
             tgtId: tgtIdValue,
+            offset: page,
+            limit: size
         }
     });
 }
 
 // 句对齐结果查询 - 同样修改
-export const alignSentenceService = (srcId, tgtId) => {
+export const alignSentenceService = (srcId, tgtId, page, size) => {
     // 处理可能存在的值引用
     const srcIdValue = srcId?.value !== undefined ? srcId.value : srcId;
     const tgtIdValue = tgtId?.value !== undefined ? tgtId.value : tgtId;
@@ -71,27 +73,36 @@ export const alignSentenceService = (srcId, tgtId) => {
         params: {
             srcId: srcIdValue,
             tgtId: tgtIdValue,
+            offset: page,
+            limit: size
 
         }
     });
 }
 
-// 多译本策略对齐
+// 多译本对齐
 export const getContextAnalysisService = (contextAnalysisData) => {
-    // 处理数组参数 - 将数组转换为逗号分隔的字符串
+    // 确保参数格式正确
+    const srcSentence = typeof contextAnalysisData.srcSentence === 'object' && contextAnalysisData.srcSentence.value !== undefined
+        ? contextAnalysisData.srcSentence.value
+        : contextAnalysisData.srcSentence;
+
+    console.log("处理后的srcSentence:", srcSentence);
+
+
+    // 转换数组为逗号分隔的字符串（如果后端期望这种格式）
     const tgtCorpusIdString = Array.isArray(contextAnalysisData.tgtCorpusId)
         ? contextAnalysisData.tgtCorpusId.join(',')
         : contextAnalysisData.tgtCorpusId;
 
+    // 使用与其他API一致的方式：将参数放在URL中
     return request.post("/corpus/analysis/context", null, {
         params: {
-            srcSentence: contextAnalysisData.srcSentence,
+            srcSentence: srcSentence,
             srcCorpusId: contextAnalysisData.srcCorpusId,
-            tgtCorpusId: tgtCorpusIdString,  // 使用逗号分隔的字符串
+            tgtCorpusId: tgtCorpusIdString,
             pageNum: contextAnalysisData.pageNum,
             pageSize: contextAnalysisData.pageSize
         }
     });
 }
-
-
