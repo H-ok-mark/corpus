@@ -361,7 +361,7 @@
                     source: item.sourceSentence,
                     translation: item.targetSentence,
                     strategy: item.strategy,
-                    version: item.corpusId,
+                    version: item.corpusName,
                 }));
 
                 versionsTotal.value = result.total || result.data.length;
@@ -624,7 +624,7 @@
                     source: item.sourceSentence,
                     translation: item.targetSentence,
                     strategy: item.strategy,
-                    version: item.corpusId,
+                    version: item.corpusName,
                 }));
 
                 versionsTotal.value = result.total || result.data.length;
@@ -903,13 +903,23 @@
                                     <el-table-column
                                         prop="sourceText"
                                         label="原文"
-                                        show-overflow-tooltip
-                                    />
+                                    >
+                                        <template #default="scope">
+                                            <div class="table-cell-content">
+                                                {{ scope.row.sourceText }}
+                                            </div>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column
                                         prop="targetText"
                                         label="译文"
-                                        show-overflow-tooltip
-                                    />
+                                    >
+                                        <template #default="scope">
+                                            <div class="table-cell-content">
+                                                {{ scope.row.targetText }}
+                                            </div>
+                                        </template>
+                                    </el-table-column>
                                 </el-table>
                             </div>
                             <!-- 分页器 -->
@@ -1307,5 +1317,11 @@
 
     .sentence-button {
         margin-left: 20px; /* 与左侧内容保持一定距离 */
+    }
+
+    .table-cell-content {
+        white-space: pre-wrap; /* 保留空格和换行 */
+        word-break: break-word; /* 在单词内部换行 */
+        line-height: 1.5; /* 行间距 */
     }
 </style>

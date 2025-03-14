@@ -21,6 +21,7 @@
         semanticAnalysisService,
     } from '@/api/KWIC';
     import { el } from 'element-plus/dist/locale/zh-cn';
+    import { RefSymbol } from '@vue/reactivity';
 
     const corpusStore = useCorpusStore();
 
@@ -29,19 +30,9 @@
     const hasSearchResult = ref(false);
 
     const semanticResults = ref([]);
-    const semanticAnalysis = async wordValue => {
-        // 确保返回 Promise 以便调用方可以等待
-        console.log('词义分析请求:', wordValue);
-        const result = await semanticAnalysisService({
-            word: wordValue,
-        });
-        // 更新数据
-        // 将字符串数组转换为对象数组
-        semanticResults.value = result.data.map(item => ({
-            definition: item,
-        }));
-        console.log('词义分析：', semanticResults.value);
-    };
+    const meaning = ref('');
+    const structure = ref('');
+
     // 句法结构数据
     const syntaxPatternsData = ref([]);
     const syntaxPatterns = async wordValue => {
@@ -145,6 +136,8 @@
             rightContext: null,
         },
     ]);
+    //记录当前的状态为 'normal' | 'meaning' | 'syntax'
+    const currentMode = ref('normal');
     // 初始化长度为 10 的数组，默认全为 0
     const kwicSearch = async () => {
         // 每次搜索前重置数组
@@ -166,26 +159,83 @@
                 rightPart[index] = 1;
             }
         });
-
-        const result = await kwicService({
+        kwicData.value = {
             file: `${corpusStore.appliedCorpusName}`,
             word: searchWord.value,
-            leftpart: leftPart,
-            rightpart: rightPart,
+            leftPart: [1, 1, 1, 1, 1],
+            rightPart: [1, 1, 1, 1, 1],
             pageNum: pageNum.value,
             pageSize: pageSize.value,
-        });
+        };
 
-        tableData.value = result.data.map(item => {
-            return {
-                file: `${corpusStore.appliedCorpusName}`,
-                leftContext: item.leftContext,
-                node: item.keyword,
-                rightContext: item.rightContext,
-            };
-        });
+        if (currentMode.value === 'normal') {
+            const result = await kwicService(kwicData.value);
+            tableData.value = result.data.map(item => {
+                return {
+                    file: `${corpusStore.appliedCorpusName}`,
+                    leftContext: item.leftContext,
+                    node: item.keyword,
+                    rightContext: item.rightContext,
+                };
+            });
+            total.value = result.total;
+        }
+        if (currentMode.value === 'semantic') {
+            const result = await semanticAnalysisService(
+                kwicData.value,
+                meaning.value
+            );
+            if (result.data && result.data.results) {
+                // 使用results数组填充表格
+                tableData.value = result.data.results.map(item => {
+                    return {
+                        file: `${corpusStore.appliedCorpusName}`,
+                        leftContext: item.leftContext,
+                        node: item.keyword,
+                        rightContext: item.rightContext,
+                    };
+                });
 
-        total.value = result.total;
+                // 将字符串数组转换为对象数组
+                semanticResults.value = (result.data.meaning || []).map(text => ({
+                    definition: text,
+                }));
+                console.log('semanticResults', semanticResults.value);
+                console.log('tableData', tableData.value);
+
+                total.value = result.total || result.data.results.length;
+            }
+        }
+        if (currentMode.value === 'syntax') {
+            // 将字符串数组转换为对象数组
+
+            const result = await semanticAnalysisService(
+                kwicData.value,
+                structure.value
+            );
+            if (result.data && result.data.results) {
+                // 使用results数组填充表格
+                tableData.value = result.data.results.map(item => {
+                    return {
+                        file: `${corpusStore.appliedCorpusName}`,
+                        leftContext: item.leftContext,
+                        node: item.keyword,
+                        rightContext: item.rightContext,
+                    };
+                });
+
+                // 将字符串数组转换为对象数组
+                syntaxPatternsData.value = (result.data.meaning || []).map(
+                    text => ({
+                        definition: text,
+                    })
+                );
+                console.log('syntaxPatternsData', syntaxPatternsData.value);
+                console.log('tableData', tableData.value);
+
+                total.value = result.total || result.data.results.length;
+            }
+        }
     };
 
     // 处理搜索
@@ -195,6 +245,7 @@
             return;
         }
         hasSearchResult.value = true;
+        currentMode.value = 'normal';
         // 执行搜索逻辑
         kwicSearch();
     };
@@ -267,8 +318,9 @@
         try {
             switch (type) {
                 case 'semantic':
+                    currentMode.value = 'semantic';
                     semanticLoading.value = true;
-                    await semanticAnalysis(searchWord.value);
+                    await kwicSearch();
                     showSemanticContent.value = true;
                     break;
 
@@ -279,6 +331,7 @@
                     break;
 
                 case 'syntax':
+                    currentMode.value = 'syntax';
                     syntaxLoading.value = true;
                     await syntaxPatterns(searchWord.value);
                     showSyntaxContent.value = true;
@@ -321,6 +374,20 @@
     const handleSizeChange = (val: number) => {
         pageSize.value = val;
         kwicSearch(); // 当前页码变化时重新发起查询
+    };
+    const handleMeaningSelect = definition => {
+        // 先赋值
+        meaning.value = definition;
+        console.log('选择的词义:', meaning.value);
+        // 然后进行分析
+        handleStartAnalysis('semantic');
+    };
+    const handleStructureSelect = structure => {
+        // 先赋值
+        structure.value = structure;
+        console.log('选择的句法结构:', structure.value);
+        // 然后进行分析
+        handleStartAnalysis('syntax');
     };
 </script>
 
@@ -396,6 +463,11 @@
                                             type="default"
                                             :icon="Search"
                                             size="small"
+                                            @click="
+                                                handleMeaningSelect(
+                                                    meaning.definition
+                                                )
+                                            "
                                         ></el-button>
                                     </div>
                                 </div>
@@ -518,6 +590,11 @@
                                             type="default"
                                             :icon="Search"
                                             size="small"
+                                            @click="
+                                                handleStructureSelect(
+                                                    pattern.structure
+                                                )
+                                            "
                                         ></el-button>
                                     </div>
                                 </div>
@@ -579,21 +656,7 @@
                                             {{ item.text }}
                                         </el-checkbox>
                                     </el-checkbox-group>
-                                    <!-- 筛选内容：单选组 -->
-                                    <!-- <el-radio-group
-                                        v-model="kwicData.leftCount"
-                                    >
-                                        <el-radio
-                                            v-for="item in leftFilters"
-                                            :key="item.value"
-                                            :label="item.value"
-                                        >
-                                            {{ item.text }}
-                                        </el-radio>
-                                    </el-radio-group> -->
-                                    <!-- 筛选内容：单选组 -->
 
-                                    <!-- 筛选操作按钮：两端分布 -->
                                     <div
                                         style="display: flex; margin-top: 10px"
                                     >
