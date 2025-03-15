@@ -35,19 +35,6 @@
 
     // 句法结构数据
     const syntaxPatternsData = ref([]);
-    const syntaxPatterns = async wordValue => {
-        // 确保返回 Promise 以便调用方可以等待
-        console.log('句法结构分析请求:', wordValue);
-        const result = await syntaxPatternsService({
-            word: wordValue,
-        });
-        // 更新数据
-        // 将字符串数组转换为对象数组
-        syntaxPatternsData.value = result.data.map(item => ({
-            structure: item,
-        }));
-        console.log('句法结构分析', syntaxPatternsData.value);
-    };
 
     // 添加词汇用法数据
     const vocabUsageData = ref([
@@ -162,8 +149,8 @@
         kwicData.value = {
             file: `${corpusStore.appliedCorpusName}`,
             word: searchWord.value,
-            leftPart: [1, 1, 1, 1, 1],
-            rightPart: [1, 1, 1, 1, 1],
+            leftPart: leftPart,
+            rightPart: rightPart,
             pageNum: pageNum.value,
             pageSize: pageSize.value,
         };
@@ -209,7 +196,7 @@
         if (currentMode.value === 'syntax') {
             // 将字符串数组转换为对象数组
 
-            const result = await semanticAnalysisService(
+            const result = await syntaxPatternsService(
                 kwicData.value,
                 structure.value
             );
@@ -225,13 +212,15 @@
                 });
 
                 // 将字符串数组转换为对象数组
-                syntaxPatternsData.value = (result.data.meaning || []).map(
+                syntaxPatternsData.value = (result.data.structure || []).map(
                     text => ({
-                        definition: text,
+                        structure: text,
                     })
                 );
+
                 console.log('syntaxPatternsData', syntaxPatternsData.value);
                 console.log('tableData', tableData.value);
+                // console.log('pattern.structure', pattern.structure);
 
                 total.value = result.total || result.data.results.length;
             }
@@ -244,12 +233,39 @@
             ElMessage.warning('请输入搜索词');
             return;
         }
+
+        // 重置所有分析状态
+        resetAllStates();
+
+        // 设置搜索结果可见
         hasSearchResult.value = true;
         currentMode.value = 'normal';
+
         // 执行搜索逻辑
         kwicSearch();
     };
 
+    // 添加重置所有状态的函数
+    const resetAllStates = () => {
+        // 重置内容显示状态
+        showSemanticContent.value = false;
+        showVocabContent.value = false;
+        showSyntaxContent.value = false;
+
+        // 清空结果数据
+        semanticResults.value = [];
+        vocabUsageDescriptionData.value = '';
+        syntaxPatternsData.value = [];
+
+        // 重置加载状态
+        semanticLoading.value = false;
+        vocabLoading.value = false;
+        syntaxLoading.value = false;
+
+        // 重置意义和结构选择
+        meaning.value = '';
+        structure.value = '';
+    };
     // 筛选框的复选内容数组
     const leftFilters = [
         { text: 'L1', value: 1 },
@@ -333,7 +349,7 @@
                 case 'syntax':
                     currentMode.value = 'syntax';
                     syntaxLoading.value = true;
-                    await syntaxPatterns(searchWord.value);
+                    await kwicSearch();
                     showSyntaxContent.value = true;
                     break;
             }
@@ -382,9 +398,9 @@
         // 然后进行分析
         handleStartAnalysis('semantic');
     };
-    const handleStructureSelect = structure => {
+    const handleStructureSelect = structureText => {
         // 先赋值
-        structure.value = structure;
+        structure.value = structureText;
         console.log('选择的句法结构:', structure.value);
         // 然后进行分析
         handleStartAnalysis('syntax');
@@ -514,7 +530,7 @@
             </el-card>
 
             <!-- 全屏弹窗 -->
-            <el-dialog
+            <!-- <el-dialog
                 v-model="dialogVisible"
                 title="chair词汇用法总结"
                 fullscreen
@@ -545,7 +561,7 @@
                         layout="total, prev, pager, next"
                     />
                 </div>
-            </el-dialog>
+            </el-dialog> -->
 
             <!-- 句法结构分析卡片 -->
             <el-card class="syntax-card" shadow="hover">

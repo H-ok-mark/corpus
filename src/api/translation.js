@@ -90,7 +90,7 @@ export const getContextAnalysisService = (contextAnalysisData) => {
     console.log("处理后的srcSentence:", srcSentence);
 
 
-    // 转换数组为逗号分隔的字符串（如果后端期望这种格式）
+    // 转换数组为逗号分隔的字符串
     const tgtCorpusIdString = Array.isArray(contextAnalysisData.tgtCorpusId)
         ? contextAnalysisData.tgtCorpusId.join(',')
         : contextAnalysisData.tgtCorpusId;
