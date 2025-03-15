@@ -86,19 +86,17 @@
         },
     ]);
 
-    // 词汇对齐数据
-    const phraseAlignment = ref<any[]>([
+    // 词汇对齐数据WordAlignment
+    const wordAlignment = ref<any[]>([
         {
-            align_phrase_id: 150,
-            source_word: 'examination',
-            target_word: '考察',
-            strategy: '直译',
+            alignSentenceId: 12,
+            sourceWord: 'ancient Chinese literature',
+            targetWord: '中国古代文学',
         },
         {
-            align_phrase_id: 151,
-            source_word: 'Boxer Incident',
-            target_word: '义和团事件',
-            strategy: '直译',
+            alignSentenceId: 12,
+            sourceWord: 'Journey to the West',
+            targetWord: '《西游记》',
         },
     ]);
 
@@ -583,8 +581,6 @@
      * 多译本对比分析
      */
 
-    //  An open and inclusive attitude is in the genes of the Chinese nation.
-
     const getContextAnalysis = async () => {
         try {
             if (!selectedCorpusSrc.value) {
@@ -702,13 +698,123 @@
         }
     };
 
+    // 用于跟踪当前选中的词组
+    const selectedWordPairId = ref(null);
+
+    // 高亮原文中的词组
+    const highlightSourceText = sentenceData => {
+        if (!sentenceData || !sentenceData.sourceText) return '';
+
+        const sentenceId = sentenceData.id;
+        let text = sentenceData.sourceText;
+
+        // 过滤出当前句子的词组对齐数据
+        const currentWordAlignments = wordAlignment.value.filter(
+            item => item.alignSentenceId === sentenceId
+        );
+
+        // 按词组长度降序排序
+        const sortedAlignments = [...currentWordAlignments].sort(
+            (a, b) => b.sourceWord.length - a.sourceWord.length
+        );
+
+        // 处理每个词组的高亮
+        sortedAlignments.forEach((alignment, index) => {
+            const uniqueId = `${sentenceId}-${index}`;
+            const regex = new RegExp(
+                `(${escapeRegExp(alignment.sourceWord)})`,
+                'gi'
+            );
+
+            const highlightClass =
+                selectedWordPairId.value === uniqueId
+                    ? 'highlighted-word selected-word'
+                    : 'highlighted-word';
+
+            text = text.replace(
+                regex,
+                `<span class="${highlightClass}" 
+                                                                    data-pair-id="${uniqueId}"
+                                                                    data-sentence-id="${sentenceId}"
+                                                                    data-index="${index}">$1</span>`
+            );
+        });
+
+        return text;
+    };
+
+    // 高亮译文中的词组
+    const highlightTargetText = sentenceData => {
+        if (!sentenceData || !sentenceData.targetText) return '';
+
+        // 如果没有选中词组，直接返回原文
+        if (selectedWordPairId.value === null) {
+            return sentenceData.targetText;
+        }
+
+        const sentenceId = sentenceData.id;
+
+        // 解析选中的词组ID
+        const [selectedSentenceId, selectedIndex] = selectedWordPairId.value
+            .split('-')
+            .map(Number);
+
+        // 如果不是当前句子，不进行高亮
+        if (selectedSentenceId !== sentenceId) {
+            return sentenceData.targetText;
+        }
+
+        // 获取当前句子的词组列表
+        const currentWordAlignments = wordAlignment.value.filter(
+            item => item.alignSentenceId === sentenceId
+        );
+
+        // 获取选中的词组
+        const selectedAlignment = currentWordAlignments[selectedIndex];
+        if (!selectedAlignment) return sentenceData.targetText;
+
+        // 高亮译文
+        let text = sentenceData.targetText;
+        const regex = new RegExp(
+            `(${escapeRegExp(selectedAlignment.targetWord)})`,
+            'gi'
+        );
+
+        return text.replace(
+            regex,
+            `<span class="highlighted-target selected-word">$1</span>`
+        );
+    };
+
+    // 处理词组点击
+    const handleSentenceWordClick = (event, sentenceId) => {
+        if (event.target.classList.contains('highlighted-word')) {
+            const pairId = event.target.dataset.pairId;
+
+            // 切换选中状态
+            if (selectedWordPairId.value === pairId) {
+                selectedWordPairId.value = null;
+            } else {
+                selectedWordPairId.value = pairId;
+            }
+        } else {
+            // 点击非词组区域，取消选中
+            selectedWordPairId.value = null;
+        }
+    };
+
+    // 转义正则表达式特殊字符
+    const escapeRegExp = string => {
+        if (!string) return '';
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+
     // ==================== 初始化 ====================
     // 从 sessionStorage 中读取 isAlignment 值
     const storedAlignment = sessionStorage.getItem('isAlignment');
     if (storedAlignment === 'true') {
         isAlignment.value = true;
     }
-
     // 页面加载时获取语料库列表
     corpusList();
 </script>
@@ -790,7 +896,7 @@
                                 >
                             </div>
                             <!-- 语料库列表 -->
-                            <div class="selected-word">
+                            <div class="selected-corpus-name">
                                 当前选择的语料库：
                                 <span v-if="simple" class="selected-corpus">
                                     {{
@@ -900,24 +1006,36 @@
                                         label="记录ID"
                                         width="100"
                                     />
-                                    <el-table-column
-                                        prop="sourceText"
-                                        label="原文"
-                                    >
+
+                                    <el-table-column label="原文">
                                         <template #default="scope">
-                                            <div class="table-cell-content">
-                                                {{ scope.row.sourceText }}
-                                            </div>
+                                            <div
+                                                v-html="
+                                                    highlightSourceText(
+                                                        scope.row
+                                                    )
+                                                "
+                                                class="source-text-cell"
+                                                @click="
+                                                    handleSentenceWordClick(
+                                                        $event,
+                                                        scope.row.id
+                                                    )
+                                                "
+                                            ></div>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column
-                                        prop="targetText"
-                                        label="译文"
-                                    >
+
+                                    <el-table-column label="译文">
                                         <template #default="scope">
-                                            <div class="table-cell-content">
-                                                {{ scope.row.targetText }}
-                                            </div>
+                                            <div
+                                                v-html="
+                                                    highlightTargetText(
+                                                        scope.row
+                                                    )
+                                                "
+                                                class="target-text-cell"
+                                            ></div>
                                         </template>
                                     </el-table-column>
                                 </el-table>
@@ -980,7 +1098,7 @@
                             </div>
 
                             <!-- 语料库列表 -->
-                            <div class="selected-word">
+                            <div class="selected-corpus-name">
                                 当前选择的源语料库：
                                 <span class="selected-corpus">
                                     {{
@@ -991,7 +1109,7 @@
                                     }}
                                 </span>
                             </div>
-                            <div class="selected-word">
+                            <div class="selected-corpus-name">
                                 当前选择的译本语料库：
                                 <span class="selected-corpus">
                                     {{
@@ -1259,7 +1377,8 @@
         color: #409eff;
         font-weight: bold;
     }
-    .selected-word {
+    /* corpus-name */
+    .selected-corpus-name {
         margin-bottom: 15px;
         font-size: 14px;
         color: black;
@@ -1323,5 +1442,45 @@
         white-space: pre-wrap; /* 保留空格和换行 */
         word-break: break-word; /* 在单词内部换行 */
         line-height: 1.5; /* 行间距 */
+    }
+
+    /* 词汇对齐高亮部分  */
+    .source-text-cell,
+    .target-text-cell {
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    :deep(.highlighted-word) {
+        cursor: pointer;
+        color: #409eff;
+        background-color: #ecf5ff;
+        padding: 2px 4px;
+        border-radius: 3px;
+        transition: all 0.3s;
+    }
+
+    :deep(.highlighted-word:hover) {
+        background-color: #409eff;
+        color: white;
+    }
+
+    :deep(.highlighted-target) {
+        color: #67c23a;
+        background-color: #f0f9eb;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    :deep(.selected-word) {
+        font-weight: bold;
+        box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.5);
+        position: relative;
+        z-index: 1;
+    }
+
+    :deep(.highlighted-target.selected-word) {
+        box-shadow: 0 0 0 2px rgba(103, 194, 58, 0.5);
     }
 </style>
