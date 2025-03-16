@@ -61,7 +61,7 @@
                     <el-button
                         type="primary"
                         size="large"
-                        @click="$router.push('/corpus/list')"
+                        @click="$router.push('/corpus/users')"
                     >
                         开始使用
                     </el-button>

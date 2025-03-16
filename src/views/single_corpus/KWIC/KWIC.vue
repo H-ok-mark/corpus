@@ -500,14 +500,14 @@
                         <h3>
                             <el-icon><DataLine /></el-icon> 词汇用法总结
                         </h3>
-                        <el-button
+                        <!-- <el-button
                             class="fullscreen-btn"
                             type="default"
                             :icon="FullScreen"
                             circle
                             size="large"
                             @click="dialogVisible = true"
-                        />
+                        /> -->
                     </div>
                 </template>
                 <div v-if="!showVocabContent" class="card-empty">

@@ -69,6 +69,7 @@
         clearloginData();
     };
     import { useTokenStore } from '@/stores/token.js';
+    import { useCorpusStore } from '@/stores/corpusStore';
 
     const tokenStore = useTokenStore();
     //登录
@@ -78,7 +79,10 @@
             password: loginData.value.password,
         });
         ElMessage.success(result.message ? result.message : '登陆成功');
-
+        // 初始化 store
+        // 重置 corpusStore  Pinia 存储数据到其初始状态
+        const corpusStore = useCorpusStore();
+        corpusStore.$reset();
         // 使用 Pinia 存储 token
         tokenStore.setToken(result.data);
         // // 或者保存到 LocalStorage
@@ -93,6 +97,7 @@
     <el-row class="login-page">
         <el-col :span="12" class="bg"></el-col>
         <el-col :span="6" :offset="3" class="form">
+            <div class="title-corpus">Corpus+语料库智能应用平台</div>
             <!-- 注册表单 -->
             <el-form
                 ref="form"
@@ -248,5 +253,11 @@
                 justify-content: space-between;
             }
         }
+    }
+    .title-corpus {
+        font-size: 25px;
+        text-align: center;
+        margin-bottom: 50px;
+        font-weight: bold;
     }
 </style>

@@ -106,3 +106,17 @@ export const getContextAnalysisService = (contextAnalysisData) => {
         }
     });
 }
+
+//段落词汇提取
+export const getParagraphVocabularyService = (paragraphVocabularyData) => {
+    // 转换数组为逗号分隔的字符串
+    const sentenceIdString = Array.isArray(paragraphVocabularyData)
+        ? paragraphVocabularyData.join(',')
+        : paragraphVocabularyData;
+    console.log("sentenceIdString:", sentenceIdString);
+    return request.post("/corpus/analysis/phrase", null, {
+        params: {
+            sentenceIds: sentenceIdString
+        }
+    });
+}

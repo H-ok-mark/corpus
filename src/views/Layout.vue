@@ -18,13 +18,17 @@
     } from '@element-plus/icons-vue';
     import avatar from '@/assets/default.png';
     import { useRouter } from 'vue-router';
+    import { useCorpusStore } from '@/stores/corpusStore';
+
     // import { useTokenStore } from '@/stores/token';
     const router = useRouter();
 
     const handleCommand = command => {
         if (command === 'logout') {
-            // TODO: 清除登录状态
-            // useTokenStore.removeToken();
+            // 初始化 store
+            // 重置 corpusStore  Pinia 存储数据到其初始状态
+            const corpusStore = useCorpusStore();
+            corpusStore.$reset();
             router.push('/login');
         }
         if (command === 'user-corpus') {
@@ -49,13 +53,6 @@
                         <House />
                     </el-icon>
                     <span>首页</span>
-                </el-menu-item>
-
-                <el-menu-item index="/double-corpus/test">
-                    <el-icon>
-                        <MagicStick />
-                    </el-icon>
-                    <span>测试界面</span>
                 </el-menu-item>
 
                 <el-menu-item index="/double-corpus/translation">

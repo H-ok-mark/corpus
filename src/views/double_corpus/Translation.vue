@@ -1,6 +1,6 @@
 <script setup lang="ts">
     // ==================== 导入区 ====================
-    import { ref, onMounted } from 'vue';
+    import { ref, onMounted, watch, nextTick } from 'vue';
     import { ElMessage } from 'element-plus';
     import type { UploadUserFile } from 'element-plus';
     import { Search } from '@element-plus/icons-vue';
@@ -12,6 +12,7 @@
         alignParagraphService,
         alignSentenceService,
         getContextAnalysisService,
+        getParagraphVocabularyService,
     } from '@/api/translation.js';
 
     // ==================== 数据定义 ====================
@@ -38,6 +39,7 @@
 
     // 加载状态
     const loading = ref(false);
+    const wordLoading = ref(false);
 
     // ========== 分页数据 ==========
     // 全局分页（已废弃，保留以兼容）
@@ -68,6 +70,9 @@
     // 单/双文档选择状态
     const simple = ref(true);
     const fileRadio = ref('单文档对齐');
+
+    //词汇对齐
+    const isWordAlignment = ref(false);
 
     // 当前选项卡
     const activeTab = ref('import');
@@ -137,6 +142,10 @@
         srcSentence: '',
         tgtCorpusId: [] as number[],
     });
+    // 添加一个新变量，用于跨页面保存所有选中的语料库ID
+    const allSelectedCorpusIds = ref<number[]>([]);
+    // 添加一个语料库缓存对象，保存所有已知的语料库信息
+    const corpusCache = ref<Record<number, Corpus>>({});
 
     // 语料库列表数据
     const corpusListData = ref<
@@ -155,9 +164,9 @@
     /**
      * 清空选择的语料库
      */
-    const clearSelectedCorpus = () => {
-        selectedCorpusIds.value = [];
-    };
+    // const clearSelectedCorpus = () => {
+    //     selectedCorpusIds.value = [];
+    // };
 
     /**
      * 获取语料库列表
@@ -179,8 +188,16 @@
                 description: item.description,
             }));
 
+            // 同时更新缓存
+            result.data.forEach(item => {
+                corpusCache.value[item.id] = {
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                };
+            });
+
             corpusTotal.value = result.total;
-            console.log('语料库个数：' + corpusTotal.value);
         } catch (error) {
             console.error('获取语料库列表失败:', error);
             ElMessage.error('获取语料库列表失败');
@@ -189,12 +206,30 @@
         }
     };
 
-    /**
-     * 处理语料库分页变化
-     */
     const handleCorpusPageChange = (newPage: number) => {
         corpusPageNum.value = newPage;
-        corpusList(); // 当前页码变化时重新发起查询
+
+        // 记录是否是多选模式
+        const isMultipleMode = currentCorpusType.value === 'multiple';
+
+        // 关键改动：先禁用 watch 或延迟清空操作
+        const previousIds = [...selectedCorpusIds.value]; // 保存当前选择
+
+        // 加载新数据
+        corpusList().then(() => {
+            nextTick(() => {
+                if (isMultipleMode) {
+                    // 数据加载完后，直接设置新的选中状态，而不是先清空再设置
+                    selectedCorpusIds.value = corpusListData.value
+                        .filter(item =>
+                            allSelectedCorpusIds.value.includes(Number(item.id))
+                        )
+                        .map(item => Number(item.id));
+
+                    console.log('页面切换后重建选择:', selectedCorpusIds.value);
+                }
+            });
+        });
     };
 
     /**
@@ -398,11 +433,24 @@
         corpusDialogVisible.value = true;
 
         if (type === 'multiple') {
-            // 多选情况下，初始化已选择的ID列表
-            selectedCorpusIds.value =
-                multipleTranslations.value.map(item => item.id) || [];
+            // 多选情况下，使用已保存的多译本ID列表初始化全局选择
+            allSelectedCorpusIds.value =
+                multipleTranslations.value.map(item => Number(item.id)) || [];
+
+            // 初始化当前页面的选中状态
+            nextTick(() => {
+                selectedCorpusIds.value = corpusListData.value
+                    .filter(item =>
+                        allSelectedCorpusIds.value.includes(
+                            Number(item.id as number)
+                        )
+                    )
+                    .map(item => Number(item.id as number));
+
+                console.log('对话框打开后初始选择:', selectedCorpusIds.value);
+            });
         } else {
-            // 单选情况下的逻辑
+            // 单选情况下的逻辑保持不变
             if (type === 'single' && selectedCorpus.value) {
                 selectedCorpusId.value = selectedCorpus.value.id;
             } else if (type === 'en' && selectedDoublkeCorpusEN.value) {
@@ -412,9 +460,40 @@
             } else if (type === 'src' && selectedCorpusSrc.value) {
                 selectedCorpusId.value = selectedCorpusSrc.value.id;
             } else {
-                selectedCorpusId.value = null; // 重置选择状态
+                selectedCorpusId.value = null;
             }
         }
+    };
+
+    // 监听选择状态变化，更新总选择列表
+    watch(selectedCorpusIds, newIds => {
+        if (currentCorpusType.value === 'multiple') {
+            // 获取当前页面所有ID
+            const currentPageIds = corpusListData.value.map(item =>
+                Number(item.id)
+            );
+
+            // 更新总选择列表 - 先移除当前页所有ID，再添加新选中的ID
+            allSelectedCorpusIds.value = [
+                // 保留不在当前页面的已选ID
+                ...allSelectedCorpusIds.value.filter(
+                    id => !currentPageIds.includes(Number(id))
+                ),
+                // 添加当前页新选中的ID
+                ...newIds.map(id => Number(id)),
+            ];
+
+            console.log('当前选中:', newIds);
+            console.log('全部选中:', allSelectedCorpusIds.value);
+        }
+    });
+
+    /**
+     * 清空选择的语料库
+     */
+    const clearSelectedCorpus = () => {
+        selectedCorpusIds.value = [];
+        allSelectedCorpusIds.value = [];
     };
 
     /**
@@ -423,15 +502,31 @@
     const confirmCorpusSelection = () => {
         if (currentCorpusType.value === 'multiple') {
             // 多选情况
-            if (selectedCorpusIds.value.length === 0) {
+            if (allSelectedCorpusIds.value.length === 0) {
                 ElMessage.warning('请至少选择一个译本');
                 return;
             }
 
-            // 获取选中的所有译本信息
-            const selectedItems = corpusListData.value.filter(item =>
-                selectedCorpusIds.value.includes(item.id as number)
-            ) as Corpus[];
+            // 使用缓存获取所有选中项的完整信息
+            const selectedItems: Corpus[] = [];
+
+            allSelectedCorpusIds.value.forEach(id => {
+                if (corpusCache.value[id]) {
+                    // 从缓存中获取详细信息
+                    selectedItems.push(corpusCache.value[id]);
+                } else {
+                    // 如果缓存中没有，则记录日志
+                    console.warn(`ID为${id}的语料库没有详细信息`);
+                }
+            });
+
+            if (selectedItems.length < allSelectedCorpusIds.value.length) {
+                console.warn(
+                    `有${
+                        allSelectedCorpusIds.value.length - selectedItems.length
+                    }个选中项信息不完整`
+                );
+            }
 
             // 更新多译本结果
             multipleTranslations.value = selectedItems;
@@ -680,6 +775,7 @@
                     await doubleAlignParagraph();
                 } else if (mode === 'sentence') {
                     const success = await alignSentence();
+                    isWordAlignment.value = success;
                     if (!success) return;
                 }
 
@@ -697,6 +793,37 @@
             loading.value = false;
         }
     };
+    // 词汇提取
+    const getParagraphVocabulary = async () => {
+        try {
+            // 设置加载状态为 true
+            wordLoading.value = true;
+            console.log('开始词汇提取...');
+
+            const result = await getParagraphVocabularyService(
+                sentenceAlignment.value.map(item => item.id)
+            );
+
+            // 在保存数据时就去除两端空格
+            wordAlignment.value = result.data.map(item => ({
+                alignSentenceId: item.alignSentenceId,
+                sourceWord: item.sourceWord.trim(),
+                targetWord: item.targetWord.trim(),
+            }));
+
+            // 简化日志，只输出关键数据
+            console.log(`词汇对齐完成，共 ${wordAlignment.value.length} 个词组`);
+
+            // 保留原有的调试函数调用
+            debugWordAlignment();
+        } catch (error) {
+            console.error('词汇提取失败:', error);
+            ElMessage.error('词汇对齐失败，请稍后再试');
+        } finally {
+            // 无论成功或失败，都在最后关闭加载状态
+            wordLoading.value = false;
+        }
+    };
 
     // 用于跟踪当前选中的词组
     const selectedWordPairId = ref(null);
@@ -705,6 +832,8 @@
     const highlightSourceText = sentenceData => {
         if (!sentenceData || !sentenceData.sourceText) return '';
 
+        // 保留原有的处理逻辑
+        const markedPositions = [];
         const sentenceId = sentenceData.id;
         let text = sentenceData.sourceText;
 
@@ -718,26 +847,74 @@
             (a, b) => b.sourceWord.length - a.sourceWord.length
         );
 
-        // 处理每个词组的高亮
-        sortedAlignments.forEach((alignment, index) => {
-            const uniqueId = `${sentenceId}-${index}`;
-            const regex = new RegExp(
-                `(${escapeRegExp(alignment.sourceWord)})`,
-                'gi'
-            );
+        // 创建带有位置信息的匹配数组
+        const matches = [];
 
+        // 先收集所有匹配项及其位置
+        sortedAlignments.forEach((alignment, index) => {
+            const word = alignment.sourceWord;
+            const escapedWord = escapeRegExp(word);
+            const regex = new RegExp(`(${escapedWord})`, 'gi');
+
+            let match;
+            let matchCount = 0;
+            while ((match = regex.exec(text)) !== null) {
+                // 检查此位置是否已被标记
+                const start = match.index;
+                const end = start + match[0].length;
+                matchCount++;
+
+                // 检查是否与已标记区域重叠
+                const overlapping = markedPositions.some(
+                    pos => start < pos.end && end > pos.start
+                );
+
+                if (overlapping) {
+                    // 保留重叠警告但简化
+                    console.warn(`词组"${word}"与已标记区域重叠，跳过`);
+                } else {
+                    matches.push({
+                        start,
+                        end,
+                        word: match[0],
+                        alignment,
+                        index,
+                    });
+
+                    // 标记已处理位置
+                    markedPositions.push({ start, end });
+                }
+            }
+
+            if (matchCount === 0) {
+                // 保留未找到匹配的警告
+                console.warn(`词组"${word}"在文本中未找到匹配`);
+            }
+        });
+
+        // 按位置排序，从后往前替换，避免位置变化
+        matches.sort((a, b) => b.start - a.start);
+
+        // 执行替换
+        matches.forEach(match => {
+            const { start, end, alignment, index } = match;
+            const uniqueId = `${sentenceId}-${alignment.sourceWord.replace(
+                /\s+/g,
+                '_'
+            )}`;
             const highlightClass =
                 selectedWordPairId.value === uniqueId
                     ? 'highlighted-word selected-word'
                     : 'highlighted-word';
 
-            text = text.replace(
-                regex,
-                `<span class="${highlightClass}" 
-                                                                    data-pair-id="${uniqueId}"
-                                                                    data-sentence-id="${sentenceId}"
-                                                                    data-index="${index}">$1</span>`
-            );
+            const before = text.substring(0, start);
+            const highlighted = `<span class="${highlightClass}" 
+                                                                                                                                                                                                                                                    data-pair-id="${uniqueId}"
+                                                                                                                                                                                                                                                    data-sentence-id="${sentenceId}"
+                                                                                                                                                                                                                                                    data-index="${index}">${match.word}</span>`;
+            const after = text.substring(end);
+
+            text = before + highlighted + after;
         });
 
         return text;
@@ -745,35 +922,32 @@
 
     // 高亮译文中的词组
     const highlightTargetText = sentenceData => {
-        if (!sentenceData || !sentenceData.targetText) return '';
-
-        // 如果没有选中词组，直接返回原文
-        if (selectedWordPairId.value === null) {
+        if (!sentenceData || !sentenceData.targetText || !selectedWordPairId.value)
             return sentenceData.targetText;
-        }
 
         const sentenceId = sentenceData.id;
 
-        // 解析选中的词组ID
-        const [selectedSentenceId, selectedIndex] = selectedWordPairId.value
-            .split('-')
-            .map(Number);
+        // 解析选中的词组ID，新格式为：sentenceId-sourceWord
+        const [selectedSentenceId, selectedWordKey] =
+            selectedWordPairId.value.split('-');
 
-        // 如果不是当前句子，不进行高亮
-        if (selectedSentenceId !== sentenceId) {
+        // 确认句子ID匹配
+        if (Number(selectedSentenceId) !== sentenceId)
             return sentenceData.targetText;
-        }
 
-        // 获取当前句子的词组列表
-        const currentWordAlignments = wordAlignment.value.filter(
-            item => item.alignSentenceId === sentenceId
+        // 找出原始词组
+        const selectedSourceWord = selectedWordKey.replace(/_/g, ' ');
+
+        // 查找对应的词组对象
+        const selectedAlignment = wordAlignment.value.find(
+            item =>
+                item.alignSentenceId === sentenceId &&
+                item.sourceWord.trim() === selectedSourceWord.trim()
         );
 
-        // 获取选中的词组
-        const selectedAlignment = currentWordAlignments[selectedIndex];
         if (!selectedAlignment) return sentenceData.targetText;
 
-        // 高亮译文
+        // 执行高亮替换
         let text = sentenceData.targetText;
         const regex = new RegExp(
             `(${escapeRegExp(selectedAlignment.targetWord)})`,
@@ -786,20 +960,111 @@
         );
     };
 
-    // 处理词组点击
+    // 处理词组点击 - 增加简单的点击提示
     const handleSentenceWordClick = (event, sentenceId) => {
         if (event.target.classList.contains('highlighted-word')) {
             const pairId = event.target.dataset.pairId;
 
             // 切换选中状态
             if (selectedWordPairId.value === pairId) {
+                console.log('取消选中词组');
                 selectedWordPairId.value = null;
             } else {
                 selectedWordPairId.value = pairId;
+
+                // 提取源词组
+                const [selectedSentenceId, selectedWordKey] = pairId.split('-');
+                const selectedSourceWord = selectedWordKey.replace(/_/g, ' ');
+
+                // 查找对应的词组对象
+                const selectedAlignment = wordAlignment.value.find(
+                    item =>
+                        item.alignSentenceId === Number(selectedSentenceId) &&
+                        item.sourceWord.trim() === selectedSourceWord.trim()
+                );
+
+                if (selectedAlignment) {
+                    console.log('选中词组:');
+                    console.log(`- 原文: "${selectedAlignment.sourceWord}"`);
+                    console.log(`- 译文: "${selectedAlignment.targetWord}"`);
+                }
             }
         } else {
             // 点击非词组区域，取消选中
             selectedWordPairId.value = null;
+        }
+    };
+
+    // 调试词组匹配问题 - 只保留关键问题检测
+    const debugWordAlignment = () => {
+        console.log('检查词组对齐潜在问题...');
+
+        // 检查重复词组 - 保留类型声明
+        const duplicateSources: Record<string, number> = {};
+        const duplicateTargets: Record<string, number> = {};
+
+        wordAlignment.value.forEach(item => {
+            if (!duplicateSources[item.sourceWord]) {
+                duplicateSources[item.sourceWord] = 0;
+            }
+            duplicateSources[item.sourceWord]++;
+
+            if (!duplicateTargets[item.targetWord]) {
+                duplicateTargets[item.targetWord] = 0;
+            }
+            duplicateTargets[item.targetWord]++;
+        });
+
+        // 检查并输出重复的源词组
+        const duplicateSrcEntries = Object.entries(duplicateSources)
+            .filter(([_, count]) => count > 1)
+            .map(([word, count]) => `"${word}" (${count}次)`);
+
+        if (duplicateSrcEntries.length > 0) {
+            console.warn(
+                `发现 ${
+                    duplicateSrcEntries.length
+                } 个重复源词组: ${duplicateSrcEntries.join(', ')}`
+            );
+        }
+
+        // 检查并输出重复的目标词组
+        const duplicateTgtEntries = Object.entries(duplicateTargets)
+            .filter(([_, count]) => count > 1)
+            .map(([word, count]) => `"${word}" (${count}次)`);
+
+        if (duplicateTgtEntries.length > 0) {
+            console.warn(`发现 ${duplicateTgtEntries.length} 个重复目标词组`);
+        }
+
+        // 检查包含关系
+        let containmentCount = 0;
+        wordAlignment.value.forEach((item1, i) => {
+            wordAlignment.value.forEach((item2, j) => {
+                if (
+                    i !== j &&
+                    item1.sourceWord.includes(item2.sourceWord) &&
+                    item1.alignSentenceId === item2.alignSentenceId
+                ) {
+                    containmentCount++;
+                    // 只记录数量，不输出详情
+                }
+            });
+        });
+
+        if (containmentCount > 0) {
+            console.warn(
+                `发现 ${containmentCount} 对词组包含关系，可能导致高亮错误`
+            );
+        }
+
+        // 总结
+        if (
+            duplicateSrcEntries.length === 0 &&
+            duplicateTgtEntries.length === 0 &&
+            containmentCount === 0
+        ) {
+            console.log('未发现潜在问题');
         }
     };
 
@@ -992,6 +1257,14 @@
                                     :loading="loading"
                                     >开始对齐</el-button
                                 >
+                                <el-button
+                                    v-if="isWordAlignment"
+                                    class="sentence-button"
+                                    type="primary"
+                                    @click="getParagraphVocabulary"
+                                    :loading="wordLoading"
+                                    >词汇对齐</el-button
+                                >
                             </div>
                             <div v-if="isAlignment" class="result-area">
                                 <el-table
@@ -1103,8 +1376,7 @@
                                 <span class="selected-corpus">
                                     {{
                                         selectedCorpusSrc
-                                            ? selectedCorpusSrc.name +
-                                              selectedCorpusSrc.id
+                                            ? selectedCorpusSrc.name
                                             : '无'
                                     }}
                                 </span>
@@ -1214,7 +1486,6 @@
                 </div>
             </el-radio>
         </el-radio-group>
-
         <!-- 复选框 - 多译本情况 -->
         <el-checkbox-group
             v-else
@@ -1224,7 +1495,7 @@
             <el-checkbox
                 v-for="item in corpusListData"
                 :key="item.id"
-                :label="item.id"
+                :label="Number(item.id)"
                 border
                 class="corpus-radio-item"
             >
@@ -1252,7 +1523,7 @@
                     @click="clearSelectedCorpus"
                     v-if="currentCorpusType === 'multiple'"
                 >
-                    清空选择
+                    清空
                 </el-button>
                 <el-button type="primary" @click="confirmCorpusSelection"
                     >确认选择</el-button

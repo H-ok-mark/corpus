@@ -48,7 +48,8 @@
                 id: item.id,
                 name: item.name,
                 description: item.description,
-                size: '10MB', // 这里可以根据需要设置静态值或动态计算
+                size: null,
+                // 这里可以根据需要设置静态值或动态计算
             };
         });
         total.value = result.total;
@@ -139,12 +140,12 @@
                     <div class="corpus-info">
                         <h2 class="corpus-title">
                             {{ corpus.name }}
-                            <el-tag
+                            <!-- <el-tag
                                 class="corpus-tag"
                                 type="info"
                                 size="small"
                                 >{{ corpus.size }}</el-tag
-                            >
+                            > -->
                         </h2>
 
                         <p class="corpus-description">
