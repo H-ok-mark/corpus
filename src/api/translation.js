@@ -19,7 +19,7 @@ export const corpusListService = (corpsListData) => {
         })
     }
 }
-// 单文档对齐 - 参数作为URL查询参数发送
+// 单文档对齐
 export const singleAlignmentService = (corpusId) => {
     // 处理可能存在的值引用
     const corpusIdValue = corpusId?.value !== undefined ? corpusId.value : corpusId;
@@ -32,7 +32,7 @@ export const singleAlignmentService = (corpusId) => {
     });
 }
 
-// 双文档对齐 - 参数作为URL查询参数发送
+// 双文档对齐
 export const doubleAlignmentService = (srcId, tgtId) => {
     // 处理可能存在的值引用
     const srcIdValue = srcId?.value !== undefined ? srcId.value : srcId;
@@ -46,7 +46,7 @@ export const doubleAlignmentService = (srcId, tgtId) => {
         }
     });
 }
-// 段落对齐结果查询 - 修改为使用URL参数
+// 段落对齐结果查询
 export const alignParagraphService = (srcId, tgtId, page, size) => {
     // 处理可能存在的值引用
     const srcIdValue = srcId?.value !== undefined ? srcId.value : srcId;
@@ -63,7 +63,7 @@ export const alignParagraphService = (srcId, tgtId, page, size) => {
     });
 }
 
-// 句对齐结果查询 - 同样修改
+// 句对齐结果查询
 export const alignSentenceService = (srcId, tgtId, page, size) => {
     // 处理可能存在的值引用
     const srcIdValue = srcId?.value !== undefined ? srcId.value : srcId;

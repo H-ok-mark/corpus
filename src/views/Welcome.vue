@@ -44,9 +44,9 @@
 
     // 平台统计数据
     const statistics = ref([
-        { value: 1000000, title: '语料总量(词)' },
-        { value: '中国古典文学、政府工作报告等', title: '专业领域覆盖' },
-        { value: 99.9, title: '分析准确率', suffix: '%' },
+        { value: '1000000+', title: '语料总量(词)' },
+        { value: '中国古典文学、政务报告等', title: '专业领域覆盖' },
+        { value: 99, title: '分析准确率', suffix: '%' },
     ]);
 </script>
 
@@ -55,7 +55,7 @@
         <!-- Banner区域 -->
         <el-card class="banner-section">
             <div class="banner-content">
-                <h1>智能语料分析平台</h1>
+                <h1>语料库智能应用平台</h1>
                 <p>基于AI技术的新一代语料库分析工具</p>
                 <div class="banner-buttons">
                     <el-button

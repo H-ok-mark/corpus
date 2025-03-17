@@ -414,7 +414,11 @@
             <div class="search-area">
                 <h2>KWIC智能分析</h2>
                 <div class="corpus-name">
-                    <p>当前语料库：《{{ corpusStore.appliedCorpusName }}》</p>
+                    <p>当前语料库：</p>
+                    <p v-if="corpusStore.appliedCorpusName">
+                        《{{ corpusStore.appliedCorpusName }}》
+                    </p>
+                    <p v-else class="no-corpus-tip">暂无应用的语料库</p>
                 </div>
                 <el-input
                     v-model="searchWord"
@@ -1086,5 +1090,9 @@
         font-weight: bold;
         padding: 6px 16px;
         transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+    }
+    .no-corpus-tip {
+        color: #909399;
+        font-style: italic;
     }
 </style>

@@ -10,16 +10,9 @@
     const applyStatus = ref({}); // 将apply改为对象，用于存储每个语料库的应用状态
     //分页查询
     const pageNum = ref(1);
-    const total = ref(20);
+    const total = ref(0);
     const pageSize = ref(10); // 每页显示的数据条数
-    const corpusListData = ref([
-        {
-            id: 1,
-            name: '示例语料库1',
-            description: '这是一个示例语料库描述',
-            createTime: '2024-03-20',
-        },
-    ]);
+    const corpusListData = ref([]);
 
     import {
         corpusListService,
@@ -55,16 +48,16 @@
         pageNum.value = newPage;
         curposList(); // 当前页码变化时重新发起查询
     };
-    // 计算属性：过滤后的语料库列表
+    // 过滤后的语料库列表
     const filteredData = computed(() => {
         return corpusListData.value.filter(
             corpus =>
-                corpus.name
-                    .toLowerCase()
-                    .includes(searchQuery.value.toLowerCase()) ||
-                corpus.description
-                    .toLowerCase()
-                    .includes(searchQuery.value.toLowerCase())
+                (corpus.name?.toLowerCase() || '').includes(
+                    (searchQuery.value || '').toLowerCase()
+                ) ||
+                (corpus.description?.toLowerCase() || '').includes(
+                    (searchQuery.value || '').toLowerCase()
+                )
         );
     });
 

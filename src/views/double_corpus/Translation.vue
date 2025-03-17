@@ -40,6 +40,7 @@
     // 加载状态
     const loading = ref(false);
     const wordLoading = ref(false);
+    const versionsLoading = ref(false);
 
     // ========== 分页数据 ==========
     // 全局分页（已废弃，保留以兼容）
@@ -173,7 +174,6 @@
      */
     const corpusList = async () => {
         try {
-            loading.value = true;
             const result = await corpusListService({
                 pageNum: corpusPageNum.value,
                 pageSize: corpusPageSize.value,
@@ -201,8 +201,6 @@
         } catch (error) {
             console.error('获取语料库列表失败:', error);
             ElMessage.error('获取语料库列表失败');
-        } finally {
-            loading.value = false;
         }
     };
 
@@ -254,7 +252,7 @@
                 const result = await alignParagraphService(
                     selectedCorpus.value.id,
                     selectedCorpus.value.id,
-                    newPage,
+                    newPage - 1,
                     paragraphPageSize.value
                 );
 
@@ -269,6 +267,7 @@
                     return;
                 }
                 console.log(
+                    '英文和中文语料库',
                     selectedDoublkeCorpusEN.value.id,
                     selectedDoublkeCorpusCN.value.id,
                     newPage,
@@ -278,7 +277,7 @@
                 const result = await alignParagraphService(
                     selectedDoublkeCorpusEN.value.id,
                     selectedDoublkeCorpusCN.value.id,
-                    newPage,
+                    newPage - 1,
                     paragraphPageSize.value
                 );
 
@@ -318,7 +317,7 @@
                 const result = await alignSentenceService(
                     selectedCorpus.value.id,
                     selectedCorpus.value.id,
-                    newPage,
+                    newPage - 1,
                     sentencePageSize.value
                 );
 
@@ -336,7 +335,7 @@
                 const result = await alignSentenceService(
                     selectedDoublkeCorpusEN.value.id,
                     selectedDoublkeCorpusCN.value.id,
-                    newPage,
+                    newPage - 1,
                     sentencePageSize.value
                 );
 
@@ -675,7 +674,6 @@
     /**
      * 多译本对比分析
      */
-
     const getContextAnalysis = async () => {
         try {
             if (!selectedCorpusSrc.value) {
@@ -693,6 +691,10 @@
                 return;
             }
 
+            // 使用专用的多译本加载状态
+            versionsLoading.value = true;
+
+            // 表格也可以使用这个状态显示加载动画
             loading.value = true;
 
             // 构建请求参数
@@ -725,6 +727,8 @@
             console.error('多译本分析失败:', error);
             ElMessage.error('分析失败，请稍后再试');
         } finally {
+            // 两个加载状态都需要关闭
+            versionsLoading.value = false;
             loading.value = false;
         }
     };
@@ -909,9 +913,9 @@
 
             const before = text.substring(0, start);
             const highlighted = `<span class="${highlightClass}" 
-                                                                                                                                                                                                                                                    data-pair-id="${uniqueId}"
-                                                                                                                                                                                                                                                    data-sentence-id="${sentenceId}"
-                                                                                                                                                                                                                                                    data-index="${index}">${match.word}</span>`;
+                                                                                                                                                                                                                                                                                                                                    data-pair-id="${uniqueId}"
+                                                                                                                                                                                                                                                                                                                                    data-sentence-id="${sentenceId}"
+                                                                                                                                                                                                                                                                                                                                    data-index="${index}">${match.word}</span>`;
             const after = text.substring(end);
 
             text = before + highlighted + after;
@@ -1166,8 +1170,7 @@
                                 <span v-if="simple" class="selected-corpus">
                                     {{
                                         selectedCorpus
-                                            ? selectedCorpus.name +
-                                              selectedCorpus.id
+                                            ? selectedCorpus.name // +selectedCorpus.id
                                             : '无'
                                     }}
                                 </span>
@@ -1243,6 +1246,7 @@
                                                 ? selectedDoublkeCorpusEN.name
                                                 : '无'
                                         }}
+                                        &nbsp;&nbsp;
                                         {{
                                             selectedDoublkeCorpusCN
                                                 ? selectedDoublkeCorpusCN.name
@@ -1364,7 +1368,9 @@
                                             type="primary"
                                             @click="handleVersionSearch"
                                             :icon="Search"
-                                            >搜索</el-button
+                                            :loading="versionsLoading"
+                                        >
+                                            搜索</el-button
                                         >
                                     </template>
                                 </el-input>
@@ -1404,7 +1410,7 @@
                                         color: '#000000',
                                         borderColor: '#e0e0e0',
                                     }"
-                                    v-loading="loading"
+                                    v-loading="versionsLoading"
                                 >
                                     <!-- 独立五列结构 -->
                                     <el-table-column
@@ -1440,7 +1446,7 @@
                                     :total="versionsTotal"
                                     background
                                     @current-change="handleVersionsPageChange"
-                                    @size-change="handleSentenceSizeChange"
+                                    @size-change="handleVersionsSizeChange"
                                 />
                             </div>
                         </el-tab-pane>

@@ -9,13 +9,7 @@
 
     // 表格数据
     // 修改表格排序
-    const tableData = ref([
-        {
-            word: '',
-            frequency: '',
-            range: '',
-        },
-    ]);
+    const tableData = ref([]);
 
     import { wordsListService } from '@/api/words.js';
     import { ElMessage } from 'element-plus';
@@ -60,7 +54,7 @@
                 allwords.value = false;
             }
         } catch (error) {
-            ElMessage.error('获取词频数据失败');
+            ElMessage.info('请先选择要应用的语料库');
             tableData.value = [];
         } finally {
             loading.value = false;
@@ -68,10 +62,13 @@
     };
 
     //调用全部词频显示函数
-    wordsList();
+    if (corpusStore.appliedCorpusId != null) {
+        wordsList();
+    }
 
     const searchWord = () => {
         console.log('搜索值为：', word.value);
+        console.log('当前应用的语料库为', corpusStore.appliedCorpusId);
         wordsList();
     };
 

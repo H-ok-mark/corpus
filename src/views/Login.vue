@@ -66,6 +66,7 @@
         registerData.value.password = loginData.value.password;
         let result = await userRegisterService(registerData.value);
         ElMessage.success('注册成功');
+        isRegister.value = false;
         clearloginData();
     };
     import { useTokenStore } from '@/stores/token.js';

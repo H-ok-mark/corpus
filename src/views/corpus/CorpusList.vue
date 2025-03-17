@@ -8,22 +8,10 @@
     // 模拟的语料库数据
     const corpusListData = ref([
         {
-            id: 1,
-            name: '英语新闻语料库',
-            description: '包含近5年的英语新闻文章，涵盖政治、经济、科技等领域',
-            size: '10MB',
-        },
-        {
-            id: 2,
-            name: '学术论文语料库',
-            description: '收录各领域英语学术论文摘要，适合学术写作研究',
-            size: '15MB',
-        },
-        {
-            id: 3,
-            name: '文学作品语料库',
-            description: '经典英语文学作品集合，包括小说、诗歌等体裁',
-            size: '20MB',
+            id: null,
+            name: null,
+            description: null,
+            size: null,
         },
     ]);
     const pageNum = ref(1);

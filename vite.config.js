@@ -9,7 +9,7 @@ import path from 'node:path'
 export default defineConfig({
   plugins: [
     vue(),
-    // vueDevTools(),
+    vueDevTools(),
   ],
   publicPath: './',
   resolve: {
@@ -21,12 +21,14 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "http://120.26.57.192:8080",
+        // target: "http://localhost:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "")
       }
 
     }
-  },
+  }
+  ,
   build: {
     chunkSizeWarningLimit: 1000, // 提高警告阈值（临时方案）
     assetsInlineLimit: 4096,     // 4KB 以下资源转为 DataURL
