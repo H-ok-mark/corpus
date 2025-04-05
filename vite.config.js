@@ -7,11 +7,11 @@ import path from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/desktop/' : '/',
   plugins: [
     vue(),
     vueDevTools(),
   ],
-  publicPath: './',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -20,8 +20,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://120.26.57.192:8080",
-        // target: "http://localhost:8080",
+        //测试旧版
+        // target: "http://120.26.57.192:8080",
+        // 测试新版
+        // target: "http://120.26.126.129:8080",
+        //本地测试
+        target: "http://localhost:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "")
       }

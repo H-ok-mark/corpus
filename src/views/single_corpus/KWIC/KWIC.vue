@@ -101,7 +101,7 @@
     const selectedRightFilters = ref([1, 2, 3, 4, 5]);
     //KWIC分页
     const pageNum = ref(1);
-    const total = ref(100);
+    const total = ref();
     const pageSize = ref(10); // 每页显示的数据条数
 
     // KWIC传输数据

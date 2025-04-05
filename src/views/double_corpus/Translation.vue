@@ -50,22 +50,22 @@
 
     // 语料库列表分页
     const corpusPageNum = ref(1);
-    const corpusTotal = ref(20);
+    const corpusTotal = ref(0);
     const corpusPageSize = ref(4);
 
     // 段落对齐分析分页
     const paragraphPageNum = ref(1);
-    const paragraphTotal = ref(20);
+    const paragraphTotal = ref(0);
     const paragraphPageSize = ref(10);
 
     // 句子对齐分析分页
     const sentencePageNum = ref(1);
-    const sentenceTotal = ref(20);
+    const sentenceTotal = ref(2);
     const sentencePageSize = ref(10);
 
     // 多译本文段对比分析分页
     const versionsPageNum = ref(1);
-    const versionsTotal = ref(20);
+    const versionsTotal = ref(2);
     const versionsPageSize = ref(10);
 
     // 单/双文档选择状态
@@ -913,9 +913,9 @@
 
             const before = text.substring(0, start);
             const highlighted = `<span class="${highlightClass}" 
-                                                                                                                                                                                                                                                                                                                                    data-pair-id="${uniqueId}"
-                                                                                                                                                                                                                                                                                                                                    data-sentence-id="${sentenceId}"
-                                                                                                                                                                                                                                                                                                                                    data-index="${index}">${match.word}</span>`;
+                                                                                                                                                                                                                                                                                                                                                data-pair-id="${uniqueId}"
+                                                                                                                                                                                                                                                                                                                                                data-sentence-id="${sentenceId}"
+                                                                                                                                                                                                                                                                                                                                                data-index="${index}">${match.word}</span>`;
             const after = text.substring(end);
 
             text = before + highlighted + after;
@@ -1284,7 +1284,7 @@
                                         width="100"
                                     />
 
-                                    <el-table-column label="原文">
+                                    <el-table-column label="英文">
                                         <template #default="scope">
                                             <div
                                                 v-html="
@@ -1303,7 +1303,7 @@
                                         </template>
                                     </el-table-column>
 
-                                    <el-table-column label="译文">
+                                    <el-table-column label="中文">
                                         <template #default="scope">
                                             <div
                                                 v-html="

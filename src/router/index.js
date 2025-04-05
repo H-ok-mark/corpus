@@ -12,7 +12,6 @@ import Welcomevue from "@/views/Welcome.vue";
 
 
 
-// Define the routes for the application
 const routes = [
     { path: "/", component: LoginVue },
     { path: "/login", component: LoginVue },
@@ -36,9 +35,8 @@ const routes = [
 
 ]
 
-// Create the router instance
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(import.meta.env.BASE_URL),
     routes,
 });
 
