@@ -44,8 +44,8 @@
 
     // 平台统计数据
     const statistics = ref([
-        { value: '1000000+', title: '语料总量(词)' },
-        { value: '中国古典文学、政务报告等', title: '专业领域覆盖' },
+        { value: '10000000+', title: '语料总量(词)' },
+        { value: '中外文学著作、双语篇章+', title: '专业领域覆盖' },
         { value: 99, title: '分析准确率', suffix: '%' },
     ]);
 </script>

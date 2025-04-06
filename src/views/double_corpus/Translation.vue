@@ -913,9 +913,9 @@
 
             const before = text.substring(0, start);
             const highlighted = `<span class="${highlightClass}" 
-                                                                                                                                                                                                                                                                                                                                                data-pair-id="${uniqueId}"
-                                                                                                                                                                                                                                                                                                                                                data-sentence-id="${sentenceId}"
-                                                                                                                                                                                                                                                                                                                                                data-index="${index}">${match.word}</span>`;
+                                                                                                                                                                                                                                                                                                                                                        data-pair-id="${uniqueId}"
+                                                                                                                                                                                                                                                                                                                                                        data-sentence-id="${sentenceId}"
+                                                                                                                                                                                                                                                                                                                                                        data-index="${index}">${match.word}</span>`;
             const after = text.substring(end);
 
             text = before + highlighted + after;
@@ -1235,9 +1235,9 @@
                                     <span v-if="simple" class="selected-corpus">
                                         {{
                                             selectedCorpus
-                                                ? selectedCorpus.name +
-                                                  selectedCorpus.id
-                                                : '无'
+                                                ? selectedCorpus.name
+                                                : //   selectedCorpus.id
+                                                  '无'
                                         }}
                                     </span>
                                     <span v-else class="selected-corpus">
