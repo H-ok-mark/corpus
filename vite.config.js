@@ -20,8 +20,6 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // 旧版
-        // target: "http://120.26.126.129:8080",
         // 新版
         target: "http://115.29.177.149:8080",
         //本地测试
