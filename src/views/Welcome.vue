@@ -11,7 +11,7 @@
         },
         {
             title: '智能KWIC分析',
-            description: '基于AI的语义分析、句法结构识别、语义倾向分析',
+            description: '基于AI的词义分析、句法结构分析、词汇用法总结',
             icon: Cpu,
         },
         {
@@ -29,8 +29,8 @@
     // AI特色功能
     const aiFeatures = ref([
         {
-            title: '语义智能识别',
-            desc: '自动识别检索词的多重语义，展示不同语境用法',
+            title: '词义智能识别',
+            desc: '自动识别检索词的多重词义，展示不同语境用法',
         },
         {
             title: '词汇用法总结',

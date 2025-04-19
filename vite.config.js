@@ -20,12 +20,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        //测试旧版
-        // target: "http://120.26.57.192:8080",
-        // 测试新版
+        // 旧版
         // target: "http://120.26.126.129:8080",
+        // 新版
+        target: "http://115.29.177.149:8080",
         //本地测试
-        target: "http://localhost:8080",
+        // target: "http://localhost:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, "")
       }
